@@ -1,0 +1,25 @@
+body {
+  color: black;
+  background: white;
+}
+
+div {
+  padding-top: 50px;
+  padding-right: 30px;
+  padding-bottom: 50px;
+  padding-left: 80px;
+}
+
+input {
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
+img {
+  width: 300px;
+  margin-bottom: 25px;
+}
