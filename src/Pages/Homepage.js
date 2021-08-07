@@ -23,6 +23,7 @@ class Homepage extends React.Component{
         console.log(this.state.insideText);
     }
     //var returnMediumGrid;
+    //If you add a new channel, add a new case to the switch-case statement.
     render() {
         var middleColumn;
         switch(this.state.insideText) {

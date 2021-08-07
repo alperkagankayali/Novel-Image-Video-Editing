@@ -18,7 +18,7 @@ const machine = {
 
         identifying: {on: {next: "computeTransformation"}, showImage: true, showStyleImage: true},
         computeTransformation: {on: {next: "complete"}, showImage: true, showStyleImage: true},
-        complete: {on: {next: "modelReady"}, showImage: true, showStyleImage: true, showResults: true}
+        complete: {on: {next: "modelReady"}, showImage: true, showStyleImage: true, showResults: true, showSaveButton: true}
     }
 };
 
@@ -148,7 +148,7 @@ const StyleTransfer = () => {
         complete: {action: reset, text: "Reset"}
     };
 
-    const {showImage, showStyleImage, showResults} = machine.states[appState];
+    const {showImage, showStyleImage, showResults, showSaveButton} = machine.states[appState];
 
     return (
         
@@ -180,11 +180,20 @@ const StyleTransfer = () => {
                         />
                     </Grid>
                 </Grid>
+
                 {showResults && <Canvas/>}
-                <Button variant="contained" color="secondary" onClick={actionButton[appState].action || (() => {
-                })}>
-                    {actionButton[appState].text}
-                </Button>
+                <Grid container direction="row" wrap="nowrap">
+                    <Grid container item xs={12} spacing={3}>
+                        <Button variant="contained" color="secondary" onClick={actionButton[appState].action || (() => {
+                        })}>
+                            {actionButton[appState].text}
+                        </Button>
+                    </Grid>
+                    <Grid container item xs={12} spacing={3}>
+                        {showSaveButton && <Button variant="contained" color="secondary" align={"center"}>Save Style</Button>}
+                    </Grid>
+                </Grid>
+                
             </Grid>
         </Grid>
         //     <Container fluid>
