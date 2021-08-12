@@ -1,0 +1,50 @@
+import React, {useState, useRef, useReducer} from "react";
+import {Button, Grid, Typography} from "@material-ui/core";
+import StyleTransfer from "../Utils/styleTransfer";
+import * as tf from '@tensorflow/tfjs';
+
+class EffectGrid extends React.Component {
+    
+    
+    constructor() {
+        super();
+        this.state = {
+            output_tensor: null,
+        };
+    }
+
+    handleChange(input_tensor){
+        //this.state.output_tensor = input_tensor;
+        this.setState({output_tensor: input_tensor})
+        //console.log(this.props);
+        this.props.updateCurrentOutputTensor(this.state.output_tensor);
+        //console.log(this.state.output_tensor);
+    }
+
+    render() {
+        
+        //var text1 = <MainCard cardText="Set aside bla bla"/>;
+        
+        //text1 = {...text1, ...<MainCard cardText="Set aside bla bla"/>};
+        //If you want to add a new channel, just add it as a button.
+        var middleColumn;
+
+        switch(this.props.insideText) {
+          case "STYLE TRANSFER":
+            middleColumn = <StyleTransfer handleChange={this.handleChange.bind(this)} />;
+            break;
+          default:
+            middleColumn = "Select your channel :)";
+            
+            break;
+        }
+        return (
+
+            <Grid container direction="column" wrap="nowrap">
+             {middleColumn}
+             <Button variant="contained" color="secondary" onClick = {this.props.buttonClick1} align={"center"}>Save Style</Button>
+            </Grid>
+        );
+    }
+}
+export default EffectGrid;

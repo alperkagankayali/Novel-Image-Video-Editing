@@ -10,21 +10,16 @@ class HomeLeftGrid extends React.Component {
 
     constructor() {
         super();
-        this.state = {
+        /*this.state = {
             insideText: "",
             btnNewScreen: true
-        };
-        this.newScreen = this.newScreen.bind(this);
-    }
-
-    newScreen(e) {
-        this.setState({ btnNewScreen: !this.state.btnNewScreen,
-                        insideText: e.target.innerText
-         });
-        
+        };*/
     }
     render() {
-        var text = this.state.btnNewScreen ? 'Add new' : 'Screens';
+        //var text = this.state.btnNewScreen ? 'Add new' : 'Screens';
+        
+        //If you want to add a new channel, just add it as a button.
+
         return (
 
             <Grid container direction="column" wrap="nowrap">

@@ -22,7 +22,7 @@ const machine = {
     }
 };
 
-const StyleTransfer = () => {
+const StyleTransfer = (props) => {
     const [results, setResults] = useState([]);
     const [imageURL, setImageURL] = useState(null);
     const [imageStyleURL, setImageStyleURL] = useState(null);
@@ -42,6 +42,8 @@ const StyleTransfer = () => {
 
     const next = () => dispatch("next");
 
+
+
     const loadModel = async () => {
         next()
         const transformerModel = await tf.loadGraphModel('saved_model_transformer_separable_js/model.json')
@@ -56,12 +58,15 @@ const StyleTransfer = () => {
         next()
     }
 
+
     const identify = async () => {
         next()
         const stylized = await tf.tidy(() => {
             return transformerModel.predict([tf.browser.fromPixels(imageStyleRef.current).toFloat().div(tf.scalar(255)).expandDims(), styleVector]).squeeze();
         })
         console.log("I predicted something")
+        props.handleChange(stylized);
+        //console.log(stylized)
         setStylizedImage(stylized)
         next();
     };
@@ -84,6 +89,8 @@ const StyleTransfer = () => {
         updateCanvas() {
            
             tf.browser.toPixels(stylizedImage,  this.canvas );
+            //const url_stylized_image = URL.createObjectURL(stylizedImage);
+            
         }
 
         render() {
@@ -98,6 +105,7 @@ const StyleTransfer = () => {
 
     const reset = async () => {
         setResults([]);
+        props.handleChange(null);
         next();
     };
 
@@ -150,6 +158,7 @@ const StyleTransfer = () => {
 
     const {showImage, showStyleImage, showResults, showSaveButton} = machine.states[appState];
 
+    //console.log(props);
     return (
         
         <Grid container spacing={10} direction="row">
@@ -181,16 +190,13 @@ const StyleTransfer = () => {
                     </Grid>
                 </Grid>
 
-                {showResults && <Canvas/>}
+                {showResults && <Canvas />}
                 <Grid container direction="row" wrap="nowrap">
                     <Grid container item xs={12} spacing={3}>
                         <Button variant="contained" color="secondary" onClick={actionButton[appState].action || (() => {
                         })}>
                             {actionButton[appState].text}
                         </Button>
-                    </Grid>
-                    <Grid container item xs={12} spacing={3}>
-                        {showSaveButton && <Button variant="contained" color="secondary" align={"center"}>Save Style</Button>}
                     </Grid>
                 </Grid>
                 
