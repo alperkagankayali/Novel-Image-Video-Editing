@@ -26,6 +26,9 @@ class HomeLeftGrid extends React.Component {
                 <Button variant="contained" color="secondary" onClick={this.props.buttonClick}>
                     style transfer
                 </Button>
+                <Button variant="contained" color="secondary" onClick={this.props.buttonClick}>
+                    super resolution
+                </Button>
             </Grid>
         );
     }

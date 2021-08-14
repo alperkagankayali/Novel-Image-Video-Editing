@@ -1,6 +1,7 @@
 import React, {useState, useRef, useReducer} from "react";
 import {Button, Grid, Typography} from "@material-ui/core";
 import StyleTransfer from "../Utils/styleTransfer";
+import SuperResolution from "../Utils/superResolution.js";
 import * as tf from '@tensorflow/tfjs';
 
 class EffectGrid extends React.Component {
@@ -37,10 +38,13 @@ class EffectGrid extends React.Component {
         var middleColumn;
 
         switch(this.props.insideText) {
-          case "STYLE TRANSFER":
+        case "STYLE TRANSFER":
             middleColumn = <StyleTransfer handleChange={this.handleChange.bind(this)} />;
             break;
-          default:
+        case "SUPER RESOLUTION":
+            middleColumn = <SuperResolution handleChange={this.handleChange.bind(this)} />;
+            break;
+        default:
             middleColumn = "Select your channel :)";
             
             break;
