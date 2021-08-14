@@ -105,7 +105,8 @@ const StyleTransfer = (props) => {
 
     const reset = async () => {
         setResults([]);
-        props.handleChange(null);
+        console.log("I am in reset state");
+        props.handleChange({});
         next();
     };
 

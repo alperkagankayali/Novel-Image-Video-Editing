@@ -9,15 +9,22 @@ class EffectGrid extends React.Component {
     constructor() {
         super();
         this.state = {
-            output_tensor: null,
+            output_tensor: {},
+            my_message: "",
         };
     }
 
     handleChange(input_tensor){
+
         //this.state.output_tensor = input_tensor;
-        this.setState({output_tensor: input_tensor})
+        
+        this.setState({output_tensor: input_tensor}, () => {
+  console.log(this.state.output_tensor, 'output_tensor');
+});
         //console.log(this.props);
-        this.props.updateCurrentOutputTensor(this.state.output_tensor);
+        //console.log(this.state.my_message);
+        //this.forceUpdate();
+        this.props.updateCurrentOutputTensor(input_tensor);
         //console.log(this.state.output_tensor);
     }
 

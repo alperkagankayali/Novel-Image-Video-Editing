@@ -13,7 +13,7 @@ class Homepage extends React.Component{
         super();
         this.state = {
             insideText: "",
-            current_output_tensor: null,
+            current_output_tensor: {},
             saveButtonClicked: false,
         };
     }
@@ -36,9 +36,13 @@ class Homepage extends React.Component{
         })
     }
     updateCurrentOutputTensor(output_tensor){
-        this.setState({current_output_tensor: output_tensor})
+        //console.log(output_tensor);
+        this.setState({current_output_tensor: output_tensor}, () => {
+  console.log(this.state.current_output_tensor, 'output_tensor1');
+});
+        //this.forceUpdate();
         //this.state.current_output_tensor = output_tensor;
-        console.log(this.state.current_output_tensor);
+        //console.log(this.state.current_output_tensor);
     }
     //var returnMediumGrid;
     //If you add a new channel, add a new case to the switch-case statement.
