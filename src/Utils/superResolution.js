@@ -138,11 +138,15 @@ const SuperResolution = (props) => {
 
         //const img = getImage(imageURL);
         let img = tf.browser.fromPixels(imageRef.current).toFloat().div(tf.scalar(255)).expandDims();
-        console.log(img);
-        //img = tf.tensor(img);
+       
+        let size_arr = img.shape;
+        let size_increase = 2; // Right now only increase by 2
+        let new_size_arr = [parseInt(size_arr[1] * size_increase), // NWHC sp 0 - batch size
+                            parseInt(size_arr[2] * size_increase), 
+                            size_arr[3]];
 
-        const resized = tf.image.resizeBilinear(img, [512,512])
-        img = tf.image.resizeBilinear(img, [256,256])
+        const resized = tf.image.resizeBilinear(img, [new_size_arr[0], new_size_arr[1]]);
+        img = tf.image.resizeBilinear(img, [size_arr[1], size_arr[2]]);
 
         console.log(resized.shape, img.shape)
         var feed_dict = new Object();
@@ -150,8 +154,8 @@ const SuperResolution = (props) => {
         var feed_dict = {};
         const axis = 3;
         feed_dict['dropout_keep_rate'] = tf.tensor(1);
-        feed_dict['x2'] = resized.expandDims(axis).reshape([3,512,512,1]);
-        feed_dict['x'] = img.expandDims(axis).reshape([3,256,256,1]);
+        feed_dict['x2'] = resized.expandDims(axis).reshape([new_size_arr[2],new_size_arr[0], new_size_arr[1],1]);
+        feed_dict['x'] = img.expandDims(axis).reshape([size_arr[3], size_arr[1], size_arr[2], 1]);
 
         // const resized_image = await tf.tidy(() => {
         //     return model.predict([1], [stylizedImage.expandDims(), [1.0], resized.expandDims(), ]).squeeze().clipByValue(0, 1);
@@ -159,7 +163,7 @@ const SuperResolution = (props) => {
         
         const resized_image = await tf.tidy(() => {
             return model.predict(feed_dict).squeeze().clipByValue(0, 1);
-        }).reshape([512,512,3]);
+        }).reshape([new_size_arr[0], new_size_arr[1], new_size_arr[2]]);
         console.log(resized_image);
         //setStyleVector(bottleneck)
         props.handleChange(resized_image);
@@ -181,12 +185,9 @@ const SuperResolution = (props) => {
         <div>
 
             <img src={imageURL} alt="upload-preview" ref={imageRef} 
-                    width="256" height="256"/>
+                    />
 
             <Grid item spacing={10}>
-                        {showImage && <Typography align={"center"}><b>Style image</b></Typography>}
-                        {showImage && <Typography>Blaa</Typography> &&
-                        <img src={imageURL} alt="upload-preview" ref={imageRef} width="256" height="256"/>}
                         <input id="content-img"
                                type="file"
                                accept="image/*"

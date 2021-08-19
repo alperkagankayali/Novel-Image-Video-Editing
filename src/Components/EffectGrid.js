@@ -2,6 +2,9 @@ import React, {useState, useRef, useReducer} from "react";
 import {Button, Grid, Typography} from "@material-ui/core";
 import StyleTransfer from "../Utils/styleTransfer";
 import SuperResolution from "../Utils/superResolution.js";
+import FaceGeneration from "../Utils/faceGeneration";
+import ImageBlur from "../Utils/imageBlur";
+import ImageFlip from "../Utils/imageFlip";
 import * as tf from '@tensorflow/tfjs';
 
 class EffectGrid extends React.Component {
@@ -43,6 +46,15 @@ class EffectGrid extends React.Component {
             break;
         case "SUPER RESOLUTION":
             middleColumn = <SuperResolution handleChange={this.handleChange.bind(this)} />;
+            break;
+        case "FACE GENERATION":
+            middleColumn = <FaceGeneration handleChange={this.handleChange.bind(this)} />;
+            break;
+        case "IMAGE BLUR":
+            middleColumn = <ImageBlur handleChange={this.handleChange.bind(this)} />;
+            break;
+        case "IMAGE FLIP":
+            middleColumn = <ImageFlip handleChange={this.handleChange.bind(this)} />;
             break;
         default:
             middleColumn = "Select your channel :)";

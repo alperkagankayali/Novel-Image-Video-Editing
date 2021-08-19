@@ -29,6 +29,15 @@ class HomeLeftGrid extends React.Component {
                 <Button variant="contained" color="secondary" onClick={this.props.buttonClick}>
                     super resolution
                 </Button>
+                <Button variant="contained" color="secondary" onClick={this.props.buttonClick}>
+                    image blur
+                </Button>
+                <Button variant="contained" color="secondary" onClick={this.props.buttonClick}>
+                    image flip
+                </Button>
+                <Button variant="contained" color="secondary" onClick={this.props.buttonClick}>
+                    face generation
+                </Button>
             </Grid>
         );
     }
