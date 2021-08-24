@@ -1,4 +1,4 @@
-import React, {useState, useRef, useReducer} from "react";
+import React, {useState, useRef, useReducer, useEffect} from "react";
 import * as mobilenet from "@tensorflow-models/mobilenet";
 import * as tf from '@tensorflow/tfjs';
 import {Button, Grid, Typography} from "@material-ui/core";
@@ -23,12 +23,14 @@ const machine = {
 const SuperResolution = (props) => {
     const [results, setResults] = useState([]);
     const [imageURL, setImageURL] = useState(null);
+    const [initialCalled, setInitialCalled] = useState(true);
     const [imageStyleURL, setImageStyleURL] = useState(null);
+    const [previousImage, setPreviousImage] = useState(null);
     const [styleModel, setStyleModel] = useState(null);
     const [styleVector, setStyleVector] = useState(null);
     const [stylizedImage, setStylizedImage] = useState(null);
     const [resizeModel, setResizeModel] = useState(null);
-    const [transformerModel, setTransformetModel] = useState(null)
+    const [transformerModel, setTransformetModel] = useState(null);
     const imageRef = useRef();
     const imageStyleRef = useRef();
     const inputRef = useRef();
@@ -39,6 +41,18 @@ const SuperResolution = (props) => {
         machine.states[state].on[event] || machine.initial;
 
     const [appState, dispatch] = useReducer(reducer, machine.initial);
+
+     useEffect(() => {    // Update the document title using the browser API    
+        if(initialCalled){
+            if(Object.keys(props.output_tensor).length != 0){
+                console.log("sa as ben geldim");
+                setPreviousImage(props.output_tensor.clone());
+            }
+            props.handleChange({});
+            
+            setInitialCalled(false);
+        }
+          });
 
     const next = () => dispatch("next");
 
@@ -57,15 +71,26 @@ const SuperResolution = (props) => {
     }
 
     const identify = async () => {
-        console.log(imageStyleRef.current);
-        console.log(styleVector);
+        var stylized = null;
+        console.log(previousImage, "sa as sa as");
+        if(previousImage != null){
+            stylized = await tf.tidy(() => {
+                return transformerModel.predict([previousImage.div(tf.scalar(255)).expandDims(), styleVector]).squeeze();
+            })
+        }
+        else{
+            console.log(tf.browser.fromPixels(imageStyleRef.current), "this is default");
+            stylized = await tf.tidy(() => {
+                return transformerModel.predict([tf.browser.fromPixels(imageStyleRef.current).toFloat().div(tf.scalar(255)).expandDims(), styleVector]).squeeze();
+            })
+        }
         
-        const stylized = await tf.tidy(() => {
-            return transformerModel.predict([tf.browser.fromPixels(imageStyleRef.current).toFloat().div(tf.scalar(255)).expandDims(), styleVector]).squeeze();
-        })
         console.log("I predicted something")
+        props.handleChange(stylized);
+        //console.log(stylized)
         setStylizedImage(stylized)
         next();
+
     };
 
     const computeStyleVector = async () => {
@@ -77,6 +102,8 @@ const SuperResolution = (props) => {
         console.log(bottleneck);
         setStyleVector(bottleneck)
         next();
+        if(previousImage != null)
+            next();
     };
 
 
@@ -116,7 +143,12 @@ const SuperResolution = (props) => {
         }
     };
 
-    const upload = () => inputRef.current.click();
+    const upload = () => {
+        if(previousImage === null)
+            inputRef.current.click();
+        else
+            next();
+    }
 
     const styleUpload = () => inputStyleRef.current.click();
 
@@ -137,7 +169,11 @@ const SuperResolution = (props) => {
         setResizeModel(model);
 
         //const img = getImage(imageURL);
-        let img = tf.browser.fromPixels(imageRef.current).toFloat().div(tf.scalar(255)).expandDims();
+        var img = null;
+        if(previousImage === null)
+            img = tf.browser.fromPixels(imageRef.current).toFloat().div(tf.scalar(255)).expandDims();
+        else
+            img = previousImage.expandDims();
        
         let size_arr = img.shape;
         let size_increase = 2; // Right now only increase by 2
@@ -187,7 +223,7 @@ const SuperResolution = (props) => {
             <img src={imageURL} alt="upload-preview" ref={imageRef} 
                     />
 
-            <Grid item spacing={10}>
+            {previousImage === null && <Grid item spacing={10}>
                         <input id="content-img"
                                type="file"
                                accept="image/*"
@@ -195,11 +231,11 @@ const SuperResolution = (props) => {
                                onChange={handleUpload}
                                ref={inputRef}
                         />
-            </Grid>
-            <Button variant="contained" color="secondary" onClick={actionButton['uploadState'].action || (() => {
+            </Grid>}
+            {previousImage === null &&<Button variant="contained" color="secondary" onClick={actionButton['uploadState'].action || (() => {
                 })}>
                     {actionButton['uploadState'].text}
-            </Button>
+            </Button>}
             <br></br>
             <Button variant="contained" color="secondary" onClick={actionButton['resizeImg'].action || (() => {
                 })}>

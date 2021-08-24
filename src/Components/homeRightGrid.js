@@ -22,7 +22,7 @@ import MainCard from "../Utils/LayerCard";
 class HomeRightGrid extends React.Component {
     
     
-    constructor() {
+    constructor(props) {
         super();
         this.state = {
             insideText: "",
@@ -30,7 +30,8 @@ class HomeRightGrid extends React.Component {
             appliedEffects: [],
             currentOutputTensor: {},
             effectID: 0,
-            effectSelected: []
+            effectSelected: [],
+            updateHappened: props.updateHappened
         };
         this.newScreen = this.newScreen.bind(this);
         this.updateAppliedEffects = this.updateAppliedEffects.bind(this);
@@ -42,9 +43,13 @@ class HomeRightGrid extends React.Component {
          });
         
     }
-
+    changeUpdateHappened(){
+        this.props.ustuneTikladik();
+    }
     updateAppliedEffects(){
         //this.forceUpdate();
+        //this.setState({});
+        this.forceUpdate();
         this.setState({
           btnNewScreen: !this.state.btnNewScreen,
           insideText: this.state.insideText,
@@ -54,16 +59,19 @@ class HomeRightGrid extends React.Component {
                                                                     filtered_image ={this.props.current_output_tensor}
                                                                     effectID = {this.state.effectID}
                                                                     addEyeForSelected = {this.addEyeForSelected.bind(this)}
-                                                                    getYourEffect={this.getEffectSelected.bind(this)}/>],
+                                                                    updateHappened = {this.state.updateHappened}
+                                                                    changeUpdateHappened = {this.changeUpdateHappened.bind(this)}
+                                                                    getYourEffect={this.getEffectSelected.bind(this)}
+                                                                    updateHappenedAmk={this.props.updateHappenedAmk}/>],
           effectSelected: [...this.state.effectSelected, false],
           effectID: this.state.effectID + 1
-
         });
 
         //console.log(this.state.currentOutputTensor);
         //console.log("sa as");
     }
     getEffectSelected(id_of_effect){
+        console.log("Called for effect: " + id_of_effect);
         let array = this.state.appliedEffects;
         let array1 = this.state.effectSelected;
         let item = false;
@@ -75,16 +83,16 @@ class HomeRightGrid extends React.Component {
                 }
             }
         }
-        return item;
+        return array1[id_of_effect];
     }
-    addEyeForSelected(id_of_effect){
+    async addEyeForSelected(id_of_effect){
         console.log("here in addEyeForSelected");
         let array = this.state.appliedEffects;
         let array1 = this.state.effectSelected;
-        console.log(array1)
+        console.log(array)
         for(var i = 0; i < array1.length; i++){
             let item= {...array1[i]};
-            if(i < array.length){
+            /*if(i < array.length){
                 if(array[i].props.effectID === id_of_effect){
                     //array.splice(i, 1);
                     item = true;
@@ -98,11 +106,25 @@ class HomeRightGrid extends React.Component {
             else{
                 item = false;
                 
-            }
+            }*/
+            if(i === id_of_effect)
+                item = true;
+            else
+                item = false;
             array1[i] = item;
-            this.setState({effectSelected: array1});
+            //console.log(array[i]);
+            //this.state.appliedEffects[i].forceUpdate();
         }
-        console.log(array1);
+        this.props.ustuneTikladik();
+        console.log(this.props.updateHappenedAmk, "e hadi ama");
+        this.setState({effectSelected: array1}, () => {
+            console.log(this.state.updateHappened, ' effect Selected xx');
+            //this.forceUpdate();
+            console.log(this.state.updateHappened, " update happened finally thank god omg");
+            
+        });
+        
+        //console.log(this.state.effectSelected);
         //this.forceUpdate();
     }
     removeAppliedEffects(cardText){
@@ -115,8 +137,12 @@ class HomeRightGrid extends React.Component {
                     //array.splice(i, 1);
                     this.setState({appliedEffects: [...this.state.appliedEffects.slice(0, i), ...this.state.appliedEffects.slice(i + 1)]}, () => {
        console.log(this.state.appliedEffects, 'applied effects'); });
-                    this.setState({effectSelected: [...this.state.effectSelected.slice(0, i), ...this.state.effectSelected.slice(i + 1)]}, () => {
+                    var newBlockArray = [...array1];
+                    newBlockArray.splice(i, 1);
+                    //setBlocks(newBlockArray)
+                    this.setState({effectSelected: newBlockArray}, () => {
       console.log(this.state.effectSelected, 'effect Selected');})
+                    //[...this.state.effectSelected.slice(0, i), ...this.state.effectSelected.slice(i + 1)]
                 }
             
             }
@@ -140,10 +166,16 @@ class HomeRightGrid extends React.Component {
                 this.props.changeSaveButton();
             }
             else{
+                console.log("now it is invoked!");
                 this.updateAppliedEffects();
                 this.props.changeSaveButton();
             }
             
+        }
+        if(this.props.updateHappenedAmk){
+            console.log("sa as");
+            this.setState({updateHappened: !this.state.updateHappened});
+            this.changeUpdateHappened();
         }
         //this.state.insideText = this.props.insideText;
         //var text1 = <MainCard cardText="Set aside bla bla"/>;

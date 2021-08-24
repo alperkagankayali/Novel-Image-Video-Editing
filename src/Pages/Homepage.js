@@ -15,6 +15,7 @@ class Homepage extends React.Component{
             insideText: "",
             current_output_tensor: {},
             saveButtonClicked: false,
+            updateHappenedAmk: false
         };
     }
     changeButtonState(event) {
@@ -44,6 +45,10 @@ class Homepage extends React.Component{
         //this.state.current_output_tensor = output_tensor;
         //console.log(this.state.current_output_tensor);
     }
+    updateupdateupdate(){
+        console.log("üstüne tıkladık");
+        this.setState({updateHappenedAmk: !this.state.updateHappenedAmk});
+    }
     //var returnMediumGrid;
     //If you add a new channel, add a new case to the switch-case statement.
     render() {
@@ -59,7 +64,9 @@ class Homepage extends React.Component{
                 <EffectGrid insideText = {this.state.insideText} buttonClick1 ={this.updateAppliedEffects.bind(this)} updateCurrentOutputTensor = {this.updateCurrentOutputTensor.bind(this)} />
             </Grid>
             <Grid container item xs={12} spacing={3}>
-                <HomeRightGrid current_output_tensor = {this.state.current_output_tensor} 
+                <HomeRightGrid current_output_tensor = {this.state.current_output_tensor}
+                updateHappenedAmk = {this.state.updateHappenedAmk}
+                ustuneTikladik = {this.updateupdateupdate.bind(this)} 
                 saveButtonClicked = {this.state.saveButtonClicked} changeSaveButton = {this.changeSaveButton.bind(this)}
                 insideText = {this.state.insideText}/>
             </Grid>

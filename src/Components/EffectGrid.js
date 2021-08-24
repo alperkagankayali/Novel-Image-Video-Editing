@@ -14,6 +14,7 @@ class EffectGrid extends React.Component {
         super();
         this.state = {
             output_tensor: {},
+            prev_output_tensor: {},
             my_message: "",
         };
     }
@@ -42,19 +43,19 @@ class EffectGrid extends React.Component {
 
         switch(this.props.insideText) {
         case "STYLE TRANSFER":
-            middleColumn = <StyleTransfer handleChange={this.handleChange.bind(this)} />;
+            middleColumn = <StyleTransfer handleChange={this.handleChange.bind(this)} output_tensor = {this.state.output_tensor}/>;
             break;
         case "SUPER RESOLUTION":
-            middleColumn = <SuperResolution handleChange={this.handleChange.bind(this)} />;
+            middleColumn = <SuperResolution handleChange={this.handleChange.bind(this)} output_tensor = {this.state.output_tensor}/>;
             break;
         case "FACE GENERATION":
-            middleColumn = <FaceGeneration handleChange={this.handleChange.bind(this)} />;
+            middleColumn = <FaceGeneration handleChange={this.handleChange.bind(this)} output_tensor = {this.state.output_tensor}/>;
             break;
         case "IMAGE BLUR":
-            middleColumn = <ImageBlur handleChange={this.handleChange.bind(this)} />;
+            middleColumn = <ImageBlur handleChange={this.handleChange.bind(this)} output_tensor = {this.state.output_tensor}/>;
             break;
         case "IMAGE FLIP":
-            middleColumn = <ImageFlip handleChange={this.handleChange.bind(this)} />;
+            middleColumn = <ImageFlip handleChange={this.handleChange.bind(this)} output_tensor = {this.state.output_tensor}/>;
             break;
         default:
             middleColumn = "Select your channel :)";

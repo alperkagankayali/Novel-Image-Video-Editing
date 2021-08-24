@@ -1,4 +1,4 @@
-import React, {useState, useRef, useReducer} from "react";
+import React, {useState, useRef, useReducer, useEffect} from "react";
 import * as mobilenet from "@tensorflow-models/mobilenet";
 import * as tf from '@tensorflow/tfjs';
 import {Button, Grid, Typography} from "@material-ui/core";
@@ -56,6 +56,8 @@ const ImageBlur = (props) => {
     const [results, setResults] = useState([]);
     const [imageURL, setImageURL] = useState(null);
     const [styleModel, setStyleModel] = useState(null);
+    const [initialCalled, setInitialCalled] = useState(true);
+    const [previousImage, setPreviousImage] = useState(null);
     const [styleVector, setStyleVector] = useState(null);
     const [stylizedImage, setStylizedImage] = useState(null);
     const [transformerModel, setTransformetModel] = useState(null)
@@ -69,6 +71,18 @@ const ImageBlur = (props) => {
         machine.states[state].on[event] || machine.initial;
 
     const [appState, dispatch] = useReducer(reducer, machine.initial);
+
+    useEffect(() => {    // Update the document title using the browser API    
+        if(initialCalled){
+            if(Object.keys(props.output_tensor).length != 0){
+                console.log("sa as ben geldim");
+                setPreviousImage(props.output_tensor.clone());
+            }
+            props.handleChange({});
+            
+            setInitialCalled(false);
+        }
+          });
 
     const next = () => dispatch("next");
 
@@ -108,7 +122,12 @@ const ImageBlur = (props) => {
         }
     };
 
-    const upload = () => inputRef.current.click();
+    const upload = () => {
+        if(previousImage === null)
+            inputRef.current.click();
+        else
+            next();
+    }
 
     async function getImage(url) {
         var img = new Image();
@@ -121,7 +140,11 @@ const ImageBlur = (props) => {
 
     const blur_image = async event => {
         
-        let img = tf.browser.fromPixels(imageRef.current).toFloat().div(tf.scalar(255)).expandDims();
+        let img = null;
+        if(previousImage === null)
+            img = tf.browser.fromPixels(imageRef.current).toFloat().div(tf.scalar(255)).expandDims();
+        else
+            img = previousImage.expandDims();
 
         let size = parseInt(document.getElementById("size_value").value);
         let sigma = parseFloat(document.getElementById("sigma_value").value);
@@ -156,11 +179,11 @@ const ImageBlur = (props) => {
             <img src={imageURL} alt="upload-preview" ref={imageRef} 
                     width="256" height="256"/>
             <br></br>
-            <Button variant="contained" color="secondary" onClick={actionButton['uploadState'].action || (() => {
+             {previousImage === null && <Button variant="contained" color="secondary" onClick={actionButton['uploadState'].action || (() => {
                             })}>
                                 {actionButton['uploadState'].text}
-            </Button>
-            <Grid item spacing={10}>
+            </Button>}
+            {previousImage === null && <Grid item spacing={10}>
                         <input id="content-img"
                                type="file"
                                accept="image/*"
@@ -168,7 +191,7 @@ const ImageBlur = (props) => {
                                onChange={handleUpload}
                                ref={inputRef}
                         />
-            </Grid>
+            </Grid>}
             <Grid>
                 <h3>Kenel Size Value</h3>
                 <select class = 'value_selecter' id="size_value">

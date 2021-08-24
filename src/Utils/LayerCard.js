@@ -45,8 +45,8 @@ class MainCard extends React.Component {
 
 
     
-    constructor(){
-        super();
+    constructor(props){
+        super(props);
         this.state = {
             image: null,
             image_url: "",
@@ -58,9 +58,14 @@ class MainCard extends React.Component {
             isSelected: false
         };
     }
+    componentWillMount(){
+        console.log("update oldu artık amk");
+        //return true;
+    }
     updateEffect(){
         console.log(this.props.effectID);
-        this.setState({EffectID: this.props.effectID + 1});
+        this.setState({EffectID: this.props.effectID + 1,
+                        isSelected: this.props.getYourEffect(this.props.effectID)});
     }
     removeAppliedEffect(e){
         console.log("coming effectID is " + (this.state.EffectID - 1));
@@ -68,19 +73,26 @@ class MainCard extends React.Component {
 
         this.forceUpdate();
     }
-    selectEffect(e){
-
-        this.props.addEyeForSelected(this.props.effectID);
-        console.log(this.props.getYourEffect(this.props.effectID) + " is for " + this.props.effectID);
-        this.forceUpdate();
+    async selectEffect(e){
+        
+        await this.props.addEyeForSelected(this.props.effectID);
+        //await this.setState({isSelected: true});
+        console.log(this.props.updateHappened + " is for " + this.props.effectID);
+        //this.forceUpdate();
     }
     updateSelected(){
         this.setState({isSelected: this.props.getYourEffect(this.props.effectID)});
         return this.props.getYourEffect(this.props.effectID);
     }
     render(){
+        console.log(this);      
         if(this.state.EffectID == ""){
             this.updateEffect();
+        }
+        if(this.props.updateHappenedAmk){
+             console.log("here bro");
+            this.updateEffect();
+            this.props.changeUpdateHappened();
         }
         return(
             <Card className={useStyles.root} >
@@ -96,7 +108,7 @@ class MainCard extends React.Component {
                 </Button>
 
               </CardContent>
-              {this.updateSelected.bind(this) && <VisibilityIcon/>}
+              {this.props.updateHappened && <VisibilityIcon/>}
               </CardActionArea>
             </Card>
         );

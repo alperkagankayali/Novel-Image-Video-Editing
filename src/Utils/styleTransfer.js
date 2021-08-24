@@ -1,5 +1,5 @@
 import "../App.css"
-import React, {useState, useRef, useReducer} from "react";
+import React, {useState, useRef, useReducer, useEffect} from "react";
 import * as mobilenet from "@tensorflow-models/mobilenet";
 import * as tf from '@tensorflow/tfjs';
 import {Button, Grid, Typography} from "@material-ui/core";
@@ -26,6 +26,8 @@ const StyleTransfer = (props) => {
     const [results, setResults] = useState([]);
     const [imageURL, setImageURL] = useState(null);
     const [imageStyleURL, setImageStyleURL] = useState(null);
+    const [previousImage, setPreviousImage] = useState(null);
+    const [initialCalled, setInitialCalled] = useState(true);
     const [model, setModel] = useState(null);
     const [styleVector, setStyleVector] = useState(null);
     const [stylizedImage, setStylizedImage] = useState(null);
@@ -34,7 +36,7 @@ const StyleTransfer = (props) => {
     const imageStyleRef = useRef();
     const inputRef = useRef();
     const inputStyleRef = useRef();
-
+    const previousImagexx = null;
     const reducer = (state, event) =>
         machine.states[state].on[event] || machine.initial;
 
@@ -43,7 +45,18 @@ const StyleTransfer = (props) => {
     const next = () => dispatch("next");
 
 
-
+    useEffect(() => {    // Update the document title using the browser API    
+        if(initialCalled){
+            if(Object.keys(props.output_tensor).length != 0){
+                console.log("sa as ben geldim");
+                setPreviousImage(props.output_tensor.clone());
+                
+            }
+            props.handleChange({});
+            
+            setInitialCalled(false);
+        }
+          });
     const loadModel = async () => {
         next()
         const transformerModel = await tf.loadGraphModel('saved_model_transformer_separable_js/model.json')
@@ -61,9 +74,20 @@ const StyleTransfer = (props) => {
 
     const identify = async () => {
         next()
-        const stylized = await tf.tidy(() => {
-            return transformerModel.predict([tf.browser.fromPixels(imageStyleRef.current).toFloat().div(tf.scalar(255)).expandDims(), styleVector]).squeeze();
-        })
+        var stylized = null;
+        console.log(previousImage, "sa as sa as");
+        if(previousImage != null){
+            stylized = await tf.tidy(() => {
+                return transformerModel.predict([previousImage.div(tf.scalar(255)).expandDims(), styleVector]).squeeze();
+            })
+        }
+        else{
+            console.log(tf.browser.fromPixels(imageStyleRef.current), "this is default");
+            stylized = await tf.tidy(() => {
+                return transformerModel.predict([tf.browser.fromPixels(imageStyleRef.current).toFloat().div(tf.scalar(255)).expandDims(), styleVector]).squeeze();
+            })
+        }
+        
         console.log("I predicted something")
         props.handleChange(stylized);
         //console.log(stylized)
@@ -78,6 +102,8 @@ const StyleTransfer = (props) => {
         })
         setStyleVector(bottleneck)
         next();
+        if(previousImage != null)
+            next();
     };
 
 
@@ -139,24 +165,41 @@ const StyleTransfer = (props) => {
             const url = URL.createObjectURL(event.target.files[0]);
             // styleImage = getImage(url)
             setImageStyleURL(url);
-            next();
+            
         }
+        next();
     };
-
-    const actionButton = {
-        initial: {action: loadModel, text: "Load Model"},
-        loadingModel: {text: "Loading Model..."},
-        loadStyleModel: {action: loadStyleModel, text: "Load Style Model"},
-        loadingStyleModel: {text: "Loading Style Model..."},
-        modelReady: {action: upload, text: "Upload Image"},
-        imageReady: {action: computeStyleVector, text: "compute style"},
-        computeStyle: {text: "Computing style..."},
-        styleImageReady: {action: styleUpload, text: "Compute style vector"},
-        identifying: {action: identify, text: "Compute Transformer"},
-        computeTransformation: {text: "Computing transformation..."},
-        complete: {action: reset, text: "Reset"}
-    };
-
+    var actionButton = null;
+    if(previousImage === null || Object.keys(previousImage).length === 0){
+            actionButton = {
+            initial: {action: loadModel, text: "Load Model"},
+            loadingModel: {text: "Loading Model..."},
+            loadStyleModel: {action: loadStyleModel, text: "Load Style Model"},
+            loadingStyleModel: {text: "Loading Style Model..."},
+            modelReady: {action: upload, text: "Upload Image"},
+            imageReady: {action: computeStyleVector, text: "compute style"},
+            computeStyle: {text: "Computing style..."},
+            styleImageReady: {action: styleUpload, text: "Compute style vector"},
+            identifying: {action: identify, text: "Compute Transformer"},
+            computeTransformation: {text: "Computing transformation..."},
+            complete: {action: reset, text: "Reset"}
+        };
+    }
+    else{
+        actionButton = {
+            initial: {action: loadModel, text: "Load Model"},
+            loadingModel: {text: "Loading Model..."},
+            loadStyleModel: {action: loadStyleModel, text: "Load Style Model"},
+            loadingStyleModel: {text: "Loading Style Model..."},
+            modelReady: {action: upload, text: "Upload Image"},
+            imageReady: {action: computeStyleVector, text: "compute style"},
+            computeStyle: {text: "Computing style..."},
+            styleImageReady: {text: "Compute style vector"},
+            identifying: {action: identify, text: "Compute Transformer"},
+            computeTransformation: {text: "Computing transformation..."},
+            complete: {action: reset, text: "Reset"}
+        };
+    }
     const {showImage, showStyleImage, showResults, showSaveButton} = machine.states[appState];
 
     //console.log(props);
@@ -178,7 +221,7 @@ const StyleTransfer = (props) => {
                                ref={inputRef}
                         />
                     </Grid>
-                    <Grid item spacing={10}>
+                    {previousImage === null && <Grid item spacing={10}>
                         {showStyleImage && <Typography align={"center"}><b>Content image</b></Typography>}
                         {showStyleImage && <img src={imageStyleURL} alt="upload-preview" ref={imageStyleRef}/>}
                         <input
@@ -188,7 +231,8 @@ const StyleTransfer = (props) => {
                             onChange={handleStyleUpload}
                             ref={inputStyleRef}
                         />
-                    </Grid>
+                    </Grid>}
+
                 </Grid>
 
                 {showResults && <Canvas />}

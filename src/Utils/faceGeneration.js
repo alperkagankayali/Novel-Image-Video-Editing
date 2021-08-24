@@ -1,4 +1,4 @@
-import React, {useState, useRef, useReducer} from "react";
+import React, {useState, useRef, useReducer, useEffect} from "react";
 import * as mobilenet from "@tensorflow-models/mobilenet";
 import * as tf from '@tensorflow/tfjs';
 import {Button, Grid, Typography} from "@material-ui/core";
@@ -24,6 +24,7 @@ const FaceGeneration = (props) => {
     const [results, setResults] = useState([]);
     const [imageURL, setImageURL] = useState(null);
     const [imageStyleURL, setImageStyleURL] = useState(null);
+    const [initialCalled, setInitialCalled] = useState(true);
     const [styleModel, setStyleModel] = useState(null);
     const [styleVector, setStyleVector] = useState(null);
     const [stylizedImage, setStylizedImage] = useState(null);
@@ -48,6 +49,12 @@ const FaceGeneration = (props) => {
         setTransformetModel(transformerModel)
         next()
     }
+    useEffect(() => {    // Update the document title using the browser API    
+        if(initialCalled){
+            props.handleChange({});
+            setInitialCalled(false);
+        }
+          });
 
     const loadStyleModel = async () => {
         const model = await tf.loadGraphModel('saved_model_style_js/model.json');

@@ -1,4 +1,4 @@
-import React, {useState, useRef, useReducer} from "react";
+import React, {useState, useRef, useReducer, useEffect} from "react";
 import * as mobilenet from "@tensorflow-models/mobilenet";
 import * as tf from '@tensorflow/tfjs';
 import {Button, Grid, Typography} from "@material-ui/core";
@@ -24,6 +24,7 @@ const ImageFlip = (props) => {
     const [results, setResults] = useState([]);
     const [imageURL, setImageURL] = useState(null);
     const [styleModel, setStyleModel] = useState(null);
+    const [initialCalled, setInitialCalled] = useState(true);
     const [styleVector, setStyleVector] = useState(null);
     const [stylizedImage, setStylizedImage] = useState(null);
     const [transformerModel, setTransformetModel] = useState(null)
@@ -37,6 +38,13 @@ const ImageFlip = (props) => {
         machine.states[state].on[event] || machine.initial;
 
     const [appState, dispatch] = useReducer(reducer, machine.initial);
+    useEffect(() => {    // Update the document title using the browser API    
+        if(initialCalled){
+            props.handleChange({});
+            setInitialCalled(false);
+        }
+          });
+
 
     const next = () => dispatch("next");
 
