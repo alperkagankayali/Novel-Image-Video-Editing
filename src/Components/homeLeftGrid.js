@@ -1,8 +1,6 @@
 import "../App.css"
-import React, {useState, useRef, useReducer} from "react";
-import * as mobilenet from "@tensorflow-models/mobilenet";
-import * as tf from '@tensorflow/tfjs';
-import {Button, Grid, Typography} from "@material-ui/core";
+import React from "react";
+import {Button, Grid} from "@material-ui/core";
 
 
 class HomeLeftGrid extends React.Component {

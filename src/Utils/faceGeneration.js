@@ -2,6 +2,7 @@ import React, {useState, useRef, useReducer, useEffect} from "react";
 import * as mobilenet from "@tensorflow-models/mobilenet";
 import * as tf from '@tensorflow/tfjs';
 import {Button, Grid, Typography} from "@material-ui/core";
+import { randomBytes } from "crypto";
 
 const machine = {
     initial: "initial",
@@ -25,6 +26,7 @@ const FaceGeneration = (props) => {
     const [imageURL, setImageURL] = useState(null);
     const [imageStyleURL, setImageStyleURL] = useState(null);
     const [initialCalled, setInitialCalled] = useState(true);
+    const [previousImage, setPreviousImage] = useState(null);
     const [styleModel, setStyleModel] = useState(null);
     const [styleVector, setStyleVector] = useState(null);
     const [stylizedImage, setStylizedImage] = useState(null);
@@ -51,7 +53,17 @@ const FaceGeneration = (props) => {
     }
     useEffect(() => {    // Update the document title using the browser API    
         if(initialCalled){
+            console.log("I am here");
+            if(props.last_output_tensor != null){
+                console.log("sa as ben geldim");
+                setPreviousImage(props.last_output_tensor);
+                
+            }
+            const id = randomBytes(4).toString('hex');
+            props.handleChange1(id);
             props.handleChange({});
+            
+            //setEffectID(id);
             setInitialCalled(false);
         }
           });
@@ -144,7 +156,11 @@ const FaceGeneration = (props) => {
         setResizeModel(model);
 
         //const img = getImage(imageURL);
-        let img = tf.browser.fromPixels(imageRef.current).toFloat().div(tf.scalar(255)).expandDims();
+        let img = null;
+        if(previousImage === null)
+            img = tf.browser.fromPixels(imageRef.current).toFloat().div(tf.scalar(255)).expandDims();
+        else
+            img = previousImage.expandDims();
         console.log(img);
         //img = tf.tensor(img);
 

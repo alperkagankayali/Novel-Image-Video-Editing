@@ -1,9 +1,7 @@
 import "../App.css"
 import React, {useState, useRef, useReducer, useEffect} from "react";
-import * as mobilenet from "@tensorflow-models/mobilenet";
 import * as tf from '@tensorflow/tfjs';
 import {Button, Grid, Typography} from "@material-ui/core";
-
 const machine = {
     initial: "initial",
     states: {
@@ -18,7 +16,7 @@ const machine = {
 
         identifying: {on: {next: "computeTransformation"}, showImage: true, showStyleImage: true},
         computeTransformation: {on: {next: "complete"}, showImage: true, showStyleImage: true},
-        complete: {on: {next: "modelReady"}, showImage: true, showStyleImage: true, showResults: true, showSaveButton: true}
+        complete: {on: {next: "modelReady"}, showImage: true, showStyleImage: true, showResults: true}
     }
 };
 
@@ -27,7 +25,6 @@ const StyleTransfer = (props) => {
     const [imageURL, setImageURL] = useState(null);
     const [imageStyleURL, setImageStyleURL] = useState(null);
     const [previousImage, setPreviousImage] = useState(null);
-    const [initialCalled, setInitialCalled] = useState(true);
     const [model, setModel] = useState(null);
     const [styleVector, setStyleVector] = useState(null);
     const [stylizedImage, setStylizedImage] = useState(null);
@@ -36,7 +33,6 @@ const StyleTransfer = (props) => {
     const imageStyleRef = useRef();
     const inputRef = useRef();
     const inputStyleRef = useRef();
-    const previousImagexx = null;
     const reducer = (state, event) =>
         machine.states[state].on[event] || machine.initial;
 
@@ -45,54 +41,88 @@ const StyleTransfer = (props) => {
     const next = () => dispatch("next");
 
 
-    useEffect(() => {    // Update the document title using the browser API    
-        if(initialCalled){
-            if(Object.keys(props.output_tensor).length != 0){
-                console.log("sa as ben geldim");
-                setPreviousImage(props.output_tensor.clone());
-                
+    useEffect( () => {    // Update the document title using the browser API    
+        if(props.last_output_tensor != null && Object.keys(props.last_output_tensor).length != 0){
+            setPreviousImage(props.last_output_tensor);
+        }
+        if(props.getData(props.effect_id) != null && props.id_to_change != null){
+            dispatch(machine.initial);         
+            if(props.applied_effects[props.getData(props.effect_id)]["model1"] != null){
+                next();
+                setTransformetModel(props.applied_effects[props.getData(props.effect_id)]["model1"]);
+                next();
             }
-            props.handleChange({});
-            
-            setInitialCalled(false);
+            else
+                setTransformetModel(null);
+            if(props.applied_effects[props.getData(props.effect_id)]["model2"] != null){
+                next();
+                setModel(props.applied_effects[props.getData(props.effect_id)]["model2"]);
+                next();
+            }
+            else
+                setModel(null);
+            if(props.applied_effects[props.getData(props.effect_id)]["image1"] != null){
+                setImageURL(props.applied_effects[props.getData(props.effect_id)]["image1"]);
+                next()
+            }
+            else
+                setImageURL(null);
+            if(props.applied_effects[props.getData(props.effect_id)]["kernel_size"]  != null){
+                next();
+                setStyleVector(props.applied_effects[props.getData(props.effect_id)]["kernel_size"]);
+                next();
+            }
+            else
+                setStyleVector(null);
+            if(props.applied_effects[props.getData(props.effect_id)]["image2"]  != null){
+                setImageStyleURL(props.applied_effects[props.getData(props.effect_id)]["image2"]);
+                next();
+            }
+            else
+                setImageStyleURL(null);
+            if(Object.keys(props.applied_effects[props.getData(props.effect_id)]["data"]).length != 0){
+                next();
+                setStylizedImage(props.applied_effects[props.getData(props.effect_id)]["data"]);
+                next();
+            }
+            else
+                setStylizedImage(null);            
         }
           });
     const loadModel = async () => {
-        next()
+        next();
         const transformerModel = await tf.loadGraphModel('saved_model_transformer_separable_js/model.json')
         setTransformetModel(transformerModel)
-        next()
+        props.handleState(imageURL, imageStyleURL, appState, styleVector, null, null, transformerModel, model);
+        next();        
     }
 
     const loadStyleModel = async () => {
         next()
         const model = await tf.loadGraphModel('saved_model_style_js/model.json');
         setModel(model);
-        next()
+        props.handleState(imageURL, imageStyleURL, appState, styleVector, null, null, transformerModel, model);
+        next()        
     }
 
 
     const identify = async () => {
         next()
         var stylized = null;
-        console.log(previousImage, "sa as sa as");
         if(previousImage != null){
             stylized = await tf.tidy(() => {
                 return transformerModel.predict([previousImage.div(tf.scalar(255)).expandDims(), styleVector]).squeeze();
             })
         }
         else{
-            console.log(tf.browser.fromPixels(imageStyleRef.current), "this is default");
             stylized = await tf.tidy(() => {
                 return transformerModel.predict([tf.browser.fromPixels(imageStyleRef.current).toFloat().div(tf.scalar(255)).expandDims(), styleVector]).squeeze();
             })
         }
-        
-        console.log("I predicted something")
         props.handleChange(stylized);
-        //console.log(stylized)
-        setStylizedImage(stylized)
+        setStylizedImage(stylized) 
         next();
+        props.handleState(imageURL, imageStyleURL, appState, styleVector, null, null, transformerModel, model);
     };
 
     const computeStyleVector = async () => {
@@ -104,6 +134,7 @@ const StyleTransfer = (props) => {
         next();
         if(previousImage != null)
             next();
+        props.handleState(imageURL, imageStyleURL, appState, bottleneck, null, null, transformerModel, model);
     };
 
 
@@ -113,10 +144,7 @@ const StyleTransfer = (props) => {
         }
 
         updateCanvas() {
-           
             tf.browser.toPixels(stylizedImage,  this.canvas );
-            //const url_stylized_image = URL.createObjectURL(stylizedImage);
-            
         }
 
         render() {
@@ -131,43 +159,37 @@ const StyleTransfer = (props) => {
 
     const reset = async () => {
         setResults([]);
-        console.log("I am in reset state");
         props.handleChange({});
+        await props.handleState(null, null, null, null, null, null, transformerModel, model);
+        await props.updateWithID(props.effect_id);
         next();
     };
 
     const upload = () => inputRef.current.click();
 
     const styleUpload = () => inputStyleRef.current.click();
-
-    async function getImage(url) {
-        var img = new Image();
-        img.src = url;
-
-        img.onload = () => {
-            return tf.browser.fromPixels(img).toFloat();
-        }
-    }
-
-    const handleUpload = event => {
+    const handleUpload = async event => {
         const {files} = event.target;
         if (files.length > 0) {
             const url = URL.createObjectURL(event.target.files[0]);
-            // contentImage = getImage(imageRef.current)
-            setImageURL(url);
+            await setImageURL(url);
             next();
+            await props.handleState(url, imageStyleURL, appState, styleVector, null, null, transformerModel, model);
         }
+        
+        
     };
 
-    const handleStyleUpload = event => {
+    const handleStyleUpload = async event => {
         const {files} = event.target;
         if (files.length > 0) {
             const url = URL.createObjectURL(event.target.files[0]);
-            // styleImage = getImage(url)
-            setImageStyleURL(url);
-            
+            await setImageStyleURL(url);
+            next();
+            await props.handleState(imageURL, url, appState, styleVector, null, null,transformerModel, model);
         }
-        next();
+        
+       
     };
     var actionButton = null;
     if(previousImage === null || Object.keys(previousImage).length === 0){
@@ -200,9 +222,7 @@ const StyleTransfer = (props) => {
             complete: {action: reset, text: "Reset"}
         };
     }
-    const {showImage, showStyleImage, showResults, showSaveButton} = machine.states[appState];
-
-    //console.log(props);
+    const {showImage, showStyleImage, showResults} = machine.states[appState];
     return (
         
         <Grid container spacing={10} direction="row">
@@ -247,52 +267,6 @@ const StyleTransfer = (props) => {
                 
             </Grid>
         </Grid>
-        //     <Container fluid>
-        //         <Row>
-        //             <Col md={3}>
-        //                 <Card>
-        //                     <Card.Body>Content image</Card.Body>
-        //             {showImage && <img src={imageURL} alt="upload-preview" ref={imageRef}/>}
-        //             <input
-        //                 type="file"
-        //                 accept="image/*"
-        //                 capture="camera"
-        //                 onChange={handleUpload}
-        //                 ref={inputRef}
-        //             />
-        //                 </Card>
-        //                 </Col>
-        //
-        //             <Col>
-        //             {showStyleImage && <img src={imageStyleURL} alt="upload-preview" ref={imageStyleRef}/>}
-        //             Style image
-        //             <input
-        //                 type="file"
-        //                 accept="image/*"
-        //                 capture="camera"
-        //                 onChange={handleStyleUpload}
-        //                 ref={inputStyleRef}
-        //             />
-        //                 </Col>
-        //             </Row>
-        //         <Row>
-        //         {
-        //             showResults && (
-        //                 <ul>
-        //                     {results.map(({className, probability}) => (
-        //                         <li key={className}>{`${className}: %${(probability * 100).toFixed(
-        //                             2
-        //                         )}`}</li>
-        //                     ))}
-        //                 </ul>
-        //             )
-        //         }
-        //         <button onClick={actionButton[appState].action || (() => {
-        //         })}>
-        //             {actionButton[appState].text}
-        //         </button>
-        //             </Row>
-        //     </Container>
     )
         ;
 }

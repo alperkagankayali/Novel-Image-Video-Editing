@@ -1,8 +1,6 @@
 import React, {useState, useRef, useReducer, useEffect} from "react";
-import * as mobilenet from "@tensorflow-models/mobilenet";
 import * as tf from '@tensorflow/tfjs';
-import {Button, Grid, Typography} from "@material-ui/core";
-import { Tensor3D, Tensor2D, Tensor1D, Tensor4D, Tensor } from '@tensorflow/tfjs';
+import {Button, Grid} from "@material-ui/core";
 
 const machine = {
     initial: "initial",
@@ -23,25 +21,42 @@ const machine = {
 const ImageFlip = (props) => {
     const [results, setResults] = useState([]);
     const [imageURL, setImageURL] = useState(null);
-    const [styleModel, setStyleModel] = useState(null);
-    const [initialCalled, setInitialCalled] = useState(true);
-    const [styleVector, setStyleVector] = useState(null);
+    const [image_flip, setImageFlip] = useState(null);
+    const [previousImage, setPreviousImage] = useState(null);
     const [stylizedImage, setStylizedImage] = useState(null);
-    const [transformerModel, setTransformetModel] = useState(null)
     const imageRef = useRef();
-    const imageStyleRef = useRef();
     const inputRef = useRef();
-    const inputStyleRef = useRef();
-    const ready = false;
 
     const reducer = (state, event) =>
         machine.states[state].on[event] || machine.initial;
 
     const [appState, dispatch] = useReducer(reducer, machine.initial);
     useEffect(() => {    // Update the document title using the browser API    
-        if(initialCalled){
-            props.handleChange({});
-            setInitialCalled(false);
+        if(props.last_output_tensor != null && Object.keys(props.last_output_tensor).length != 0){
+            setPreviousImage(props.last_output_tensor);
+            
+        }
+        if(props.getData(props.effect_id) != null && props.id_to_change != null){
+            dispatch(machine.initial);            
+            if(props.applied_effects[props.getData(props.effect_id)]["image1"] != null){
+                setImageURL(props.applied_effects[props.getData(props.effect_id)]["image1"]);
+                next()
+            }
+            else
+                setImageURL(null);
+            if(props.applied_effects[props.getData(props.effect_id)]["image_flip"] != null){
+                setImageFlip(props.applied_effects[props.getData(props.effect_id)]["image_flip"]);
+            }
+            else
+                setImageFlip(null);
+            if(Object.keys(props.applied_effects[props.getData(props.effect_id)]["data"]).length != 0){
+                setStylizedImage(props.applied_effects[props.getData(props.effect_id)]["data"]);
+                next();
+            }
+            else
+                setStylizedImage(null);
+            
+            
         }
           });
 
@@ -61,7 +76,6 @@ const ImageFlip = (props) => {
         render() {
             return (
                 <div>
-                    {/* <Typography align={"center"}><b>Stylized image</b></Typography> */}
                     <canvas ref={(ref) => this.canvas = ref}   width={256} height={256}/>
                 </div>
             )
@@ -79,34 +93,22 @@ const ImageFlip = (props) => {
         setStylizedImage(null);
         if (files.length > 0) {
             const url = URL.createObjectURL(event.target.files[0]);
-            // contentImage = getImage(imageRef.current)
             setImageURL(url);
             next();
+            props.handleState(url, null, null, null, null, null, null, null);
         }
     };
 
     const upload = () => inputRef.current.click();
 
-    async function getImage(url) {
-        var img = new Image();
-        img.src = url;
-
-        img.onload = () => {
-            return tf.browser.fromPixels(img).toFloat();
-        }
-    }
-
     const flip_image = async event => {
         
         let img = null;
-        if (stylizedImage == null)
-        {
+       
+        if(previousImage === null)
             img = tf.browser.fromPixels(imageRef.current).toFloat().div(tf.scalar(255)).expandDims();
-        }
         else
-        {
-            img = stylizedImage.expandDims();
-        }
+            img = previousImage.expandDims();
 
         let method = parseInt(document.getElementById("method").value)
 
@@ -136,6 +138,7 @@ const ImageFlip = (props) => {
 
         props.handleChange(flipped_img);
         setStylizedImage(flipped_img);
+        props.handleState(imageURL, null, null, null, null, method , null, null); 
         next();
 
     };
@@ -170,9 +173,9 @@ const ImageFlip = (props) => {
             <Grid>
                 <h3>Image Flip</h3>
                 <select class = 'value_selecter' id="method">
-                    <option value="1">Horizontal Flip </option>
-                    <option value="2" selected="selected">Vertical Flip </option>
-                    <option value="3">Rotation</option>
+                    <option value="1" selected={(image_flip != null && image_flip === 1) ? "selected" : ""}>Horizontal Flip </option>
+                    <option value="2" selected={(image_flip != null && image_flip === 2) ? "selected" : ""}>Vertical Flip </option>
+                    <option value="3" selected={(image_flip != null && image_flip === 3) ? "selected" : ""}>Rotation</option>
                 </select>
             </Grid>
             <Button variant="contained" color="secondary" onClick={actionButton['resizeImg'].action || (() => {
@@ -181,52 +184,6 @@ const ImageFlip = (props) => {
             </Button>
             {<Canvas/>}
         </div>
-        //     <Container fluid>
-        //         <Row>
-        //             <Col md={3}>
-        //                 <Card>
-        //                     <Card.Body>Content image</Card.Body>
-        //             {showImage && <img src={imageURL} alt="upload-preview" ref={imageRef}/>}
-        //             <input
-        //                 type="file"
-        //                 accept="image/*"
-        //                 capture="camera"
-        //                 onChange={handleUpload}
-        //                 ref={inputRef}
-        //             />
-        //                 </Card>
-        //                 </Col>
-        //
-        //             <Col>
-        //             {showStyleImage && <img src={imageStyleURL} alt="upload-preview" ref={imageStyleRef}/>}
-        //             Style image
-        //             <input
-        //                 type="file"
-        //                 accept="image/*"
-        //                 capture="camera"
-        //                 onChange={handleStyleUpload}
-        //                 ref={inputStyleRef}
-        //             />
-        //                 </Col>
-        //             </Row>
-        //         <Row>
-        //         {
-        //             showResults && (
-        //                 <ul>
-        //                     {results.map(({className, probability}) => (
-        //                         <li key={className}>{`${className}: %${(probability * 100).toFixed(
-        //                             2
-        //                         )}`}</li>
-        //                     ))}
-        //                 </ul>
-        //             )
-        //         }
-        //         <button onClick={actionButton[appState].action || (() => {
-        //         })}>
-        //             {actionButton[appState].text}
-        //         </button>
-        //             </Row>
-        //     </Container>
     )
         ;
 }

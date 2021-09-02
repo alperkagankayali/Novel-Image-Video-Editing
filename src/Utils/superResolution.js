@@ -1,7 +1,6 @@
 import React, {useState, useRef, useReducer, useEffect} from "react";
-import * as mobilenet from "@tensorflow-models/mobilenet";
 import * as tf from '@tensorflow/tfjs';
-import {Button, Grid, Typography} from "@material-ui/core";
+import {Button, Grid} from "@material-ui/core";
 
 const machine = {
     initial: "initial",
@@ -23,19 +22,10 @@ const machine = {
 const SuperResolution = (props) => {
     const [results, setResults] = useState([]);
     const [imageURL, setImageURL] = useState(null);
-    const [initialCalled, setInitialCalled] = useState(true);
-    const [imageStyleURL, setImageStyleURL] = useState(null);
     const [previousImage, setPreviousImage] = useState(null);
-    const [styleModel, setStyleModel] = useState(null);
-    const [styleVector, setStyleVector] = useState(null);
     const [stylizedImage, setStylizedImage] = useState(null);
-    const [resizeModel, setResizeModel] = useState(null);
-    const [transformerModel, setTransformetModel] = useState(null);
     const imageRef = useRef();
-    const imageStyleRef = useRef();
     const inputRef = useRef();
-    const inputStyleRef = useRef();
-    const ready = false;
 
     const reducer = (state, event) =>
         machine.states[state].on[event] || machine.initial;
@@ -43,69 +33,28 @@ const SuperResolution = (props) => {
     const [appState, dispatch] = useReducer(reducer, machine.initial);
 
      useEffect(() => {    // Update the document title using the browser API    
-        if(initialCalled){
-            if(Object.keys(props.output_tensor).length != 0){
-                console.log("sa as ben geldim");
-                setPreviousImage(props.output_tensor.clone());
+        if(props.last_output_tensor != null && Object.keys(props.last_output_tensor).length != 0){
+            setPreviousImage(props.last_output_tensor);            
+        }
+        if(props.getData(props.effect_id) != null && props.id_to_change != null){
+            dispatch(machine.initial);            
+            if(props.applied_effects[props.getData(props.effect_id)]["image1"] != null){
+                setImageURL(props.applied_effects[props.getData(props.effect_id)]["image1"]);
+                next()
             }
-            props.handleChange({});
+            else
+                setImageURL(null);
+            if(Object.keys(props.applied_effects[props.getData(props.effect_id)]["data"]).length != 0){
+                setStylizedImage(props.applied_effects[props.getData(props.effect_id)]["data"]);
+                next();
+            }
+            else
+                setStylizedImage(null);            
             
-            setInitialCalled(false);
         }
           });
 
     const next = () => dispatch("next");
-
-    const loadModel = async () => {
-        next()
-        const transformerModel = await tf.loadGraphModel('saved_model_transformer_separable_js/model.json')
-        setTransformetModel(transformerModel)
-        next()
-    }
-
-    const loadStyleModel = async () => {
-        const model = await tf.loadGraphModel('saved_model_style_js/model.json');
-        console.log(model);
-        setStyleModel(model);
-        next()
-    }
-
-    const identify = async () => {
-        var stylized = null;
-        console.log(previousImage, "sa as sa as");
-        if(previousImage != null){
-            stylized = await tf.tidy(() => {
-                return transformerModel.predict([previousImage.div(tf.scalar(255)).expandDims(), styleVector]).squeeze();
-            })
-        }
-        else{
-            console.log(tf.browser.fromPixels(imageStyleRef.current), "this is default");
-            stylized = await tf.tidy(() => {
-                return transformerModel.predict([tf.browser.fromPixels(imageStyleRef.current).toFloat().div(tf.scalar(255)).expandDims(), styleVector]).squeeze();
-            })
-        }
-        
-        console.log("I predicted something")
-        props.handleChange(stylized);
-        //console.log(stylized)
-        setStylizedImage(stylized)
-        next();
-
-    };
-
-    const computeStyleVector = async () => {
-        next();
-        console.log(imageRef.current);
-        const bottleneck = await tf.tidy(() => {
-            return styleModel.predict(tf.browser.fromPixels(imageRef.current).toFloat().div(tf.scalar(255)).expandDims());
-        })
-        console.log(bottleneck);
-        setStyleVector(bottleneck)
-        next();
-        if(previousImage != null)
-            next();
-    };
-
 
     class Canvas extends React.Component {
         componentDidMount() {
@@ -140,35 +89,25 @@ const SuperResolution = (props) => {
             // contentImage = getImage(imageRef.current)
             setImageURL(url);
             next();
+            
+            props.handleState(url, null, null, null, null, null, null, null);
         }
     };
 
     const upload = () => {
-        if(previousImage === null)
+        if(previousImage === null){
             inputRef.current.click();
+        }
+            
         else
             next();
     }
-
-    const styleUpload = () => inputStyleRef.current.click();
-
-    async function getImage(url) {
-        var img = new Image();
-        img.src = url;
-
-        img.onload = () => {
-            return tf.browser.fromPixels(img).toFloat();
-        }
-    }
-
+    
     const handleResizeImage = async event => {
         
         //const model = await tf.loadGraphModel('esrgan/model.json');
         const model = await tf.loadGraphModel('dcscn/model.json');
-    
-        setResizeModel(model);
 
-        //const img = getImage(imageURL);
         var img = null;
         if(previousImage === null)
             img = tf.browser.fromPixels(imageRef.current).toFloat().div(tf.scalar(255)).expandDims();
@@ -184,7 +123,6 @@ const SuperResolution = (props) => {
         const resized = tf.image.resizeBilinear(img, [new_size_arr[0], new_size_arr[1]]);
         img = tf.image.resizeBilinear(img, [size_arr[1], size_arr[2]]);
 
-        console.log(resized.shape, img.shape)
         var feed_dict = new Object();
         // or the shorthand way
         var feed_dict = {};
@@ -200,7 +138,6 @@ const SuperResolution = (props) => {
         const resized_image = await tf.tidy(() => {
             return model.predict(feed_dict).squeeze().clipByValue(0, 1);
         }).reshape([new_size_arr[0], new_size_arr[1], new_size_arr[2]]);
-        console.log(resized_image);
         //setStyleVector(bottleneck)
         props.handleChange(resized_image);
         setStylizedImage(resized_image);
@@ -214,9 +151,6 @@ const SuperResolution = (props) => {
         resizeImg: {action: handleResizeImage, text: "Resize"},
         complete: {action: reset, text: "Reset"}
     };
-
-    const {showImage, showStyleImage, showResults} = machine.states[appState];
-
     return (
         <div>
 
@@ -243,52 +177,6 @@ const SuperResolution = (props) => {
             </Button>
             {<Canvas/>}
         </div>
-        //     <Container fluid>
-        //         <Row>
-        //             <Col md={3}>
-        //                 <Card>
-        //                     <Card.Body>Content image</Card.Body>
-        //             {showImage && <img src={imageURL} alt="upload-preview" ref={imageRef}/>}
-        //             <input
-        //                 type="file"
-        //                 accept="image/*"
-        //                 capture="camera"
-        //                 onChange={handleUpload}
-        //                 ref={inputRef}
-        //             />
-        //                 </Card>
-        //                 </Col>
-        //
-        //             <Col>
-        //             {showStyleImage && <img src={imageStyleURL} alt="upload-preview" ref={imageStyleRef}/>}
-        //             Style image
-        //             <input
-        //                 type="file"
-        //                 accept="image/*"
-        //                 capture="camera"
-        //                 onChange={handleStyleUpload}
-        //                 ref={inputStyleRef}
-        //             />
-        //                 </Col>
-        //             </Row>
-        //         <Row>
-        //         {
-        //             showResults && (
-        //                 <ul>
-        //                     {results.map(({className, probability}) => (
-        //                         <li key={className}>{`${className}: %${(probability * 100).toFixed(
-        //                             2
-        //                         )}`}</li>
-        //                     ))}
-        //                 </ul>
-        //             )
-        //         }
-        //         <button onClick={actionButton[appState].action || (() => {
-        //         })}>
-        //             {actionButton[appState].text}
-        //         </button>
-        //             </Row>
-        //     </Container>
     )
         ;
 }

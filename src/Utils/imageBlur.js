@@ -1,8 +1,7 @@
 import React, {useState, useRef, useReducer, useEffect} from "react";
-import * as mobilenet from "@tensorflow-models/mobilenet";
 import * as tf from '@tensorflow/tfjs';
-import {Button, Grid, Typography} from "@material-ui/core";
-import { Tensor3D, Tensor2D, Tensor1D, Tensor4D, Tensor } from '@tensorflow/tfjs';
+import {Button, Grid} from "@material-ui/core";
+
 
 function get1dGaussianKernel(sigma, size) {
     // Generate a 1d gaussian distribution across a range
@@ -55,17 +54,12 @@ const machine = {
 const ImageBlur = (props) => {
     const [results, setResults] = useState([]);
     const [imageURL, setImageURL] = useState(null);
-    const [styleModel, setStyleModel] = useState(null);
-    const [initialCalled, setInitialCalled] = useState(true);
+    const [kernel_size, setKernelSize] = useState(null);
+    const [sigma_val, setSigmaVal] = useState(null);
     const [previousImage, setPreviousImage] = useState(null);
-    const [styleVector, setStyleVector] = useState(null);
     const [stylizedImage, setStylizedImage] = useState(null);
-    const [transformerModel, setTransformetModel] = useState(null)
     const imageRef = useRef();
-    const imageStyleRef = useRef();
     const inputRef = useRef();
-    const inputStyleRef = useRef();
-    const ready = false;
 
     const reducer = (state, event) =>
         machine.states[state].on[event] || machine.initial;
@@ -73,14 +67,34 @@ const ImageBlur = (props) => {
     const [appState, dispatch] = useReducer(reducer, machine.initial);
 
     useEffect(() => {    // Update the document title using the browser API    
-        if(initialCalled){
-            if(Object.keys(props.output_tensor).length != 0){
-                console.log("sa as ben geldim");
-                setPreviousImage(props.output_tensor.clone());
-            }
-            props.handleChange({});
+        if(props.last_output_tensor != null && Object.keys(props.last_output_tensor).length != 0){
+            setPreviousImage(props.last_output_tensor);
             
-            setInitialCalled(false);
+        }
+        if(props.getData(props.effect_id) != null && props.id_to_change != null){
+            dispatch(machine.initial);            
+            if(props.applied_effects[props.getData(props.effect_id)]["image1"] != null){
+                setImageURL(props.applied_effects[props.getData(props.effect_id)]["image1"]);
+                next()
+            }
+            else
+                setImageURL(null);
+            if(props.applied_effects[props.getData(props.effect_id)]["kernel_size"] != null){
+                setKernelSize(props.applied_effects[props.getData(props.effect_id)]["kernel_size"]);
+            }
+            else
+                setKernelSize(null);
+            if(props.applied_effects[props.getData(props.effect_id)]["sigma_val"] != null){
+                setSigmaVal(props.applied_effects[props.getData(props.effect_id)]["sigma_val"]);
+            }
+            else
+                setSigmaVal(null);
+            if(Object.keys(props.applied_effects[props.getData(props.effect_id)]["data"]).length != 0){
+                setStylizedImage(props.applied_effects[props.getData(props.effect_id)]["data"]);
+                next();
+            }
+            else
+                setStylizedImage(null);
         }
           });
 
@@ -99,7 +113,6 @@ const ImageBlur = (props) => {
         render() {
             return (
                 <div>
-                    {/* <Typography align={"center"}><b>Stylized image</b></Typography> */}
                     <canvas ref={(ref) => this.canvas = ref}   width={256} height={256}/>
                 </div>
             )
@@ -116,9 +129,9 @@ const ImageBlur = (props) => {
         const {files} = event.target;
         if (files.length > 0) {
             const url = URL.createObjectURL(event.target.files[0]);
-            // contentImage = getImage(imageRef.current)
             setImageURL(url);
             next();
+            props.handleState(url, null, null, null, null, null, null, null);
         }
     };
 
@@ -127,15 +140,6 @@ const ImageBlur = (props) => {
             inputRef.current.click();
         else
             next();
-    }
-
-    async function getImage(url) {
-        var img = new Image();
-        img.src = url;
-
-        img.onload = () => {
-            return tf.browser.fromPixels(img).toFloat();
-        }
     }
 
     const blur_image = async event => {
@@ -153,7 +157,8 @@ const ImageBlur = (props) => {
         {
             // TODO : Not working for 3
             size = 2;
-        }   
+        }
+        
         const kernel = getGaussianKernel(size,sigma);
         
         let blurred_img = blur(img, kernel);
@@ -161,6 +166,7 @@ const ImageBlur = (props) => {
 
         props.handleChange(blurred_img);
         setStylizedImage(blurred_img);
+        props.handleState(imageURL, null, null, size, sigma, null, null, null);   
         next();
 
     };
@@ -170,9 +176,6 @@ const ImageBlur = (props) => {
         resizeImg: {action: blur_image, text: "Blur",},
         complete: {action: reset, text: "Reset"}
     };
-
-    const {showImage, showStyleImage, showResults} = machine.states[appState];
-
     return (
         <div>
 
@@ -195,18 +198,18 @@ const ImageBlur = (props) => {
             <Grid>
                 <h3>Kenel Size Value</h3>
                 <select class = 'value_selecter' id="size_value">
-                    <option value="1">Small Blur / 1</option>
-                    <option value="3">Middle Blur / 3 </option>
-                    <option value="5" selected="selected">Hard Blur / 5</option>
-                    <option value="7">Extreme Blur / 7</option>
+                    <option value="1" selected={(kernel_size != null && kernel_size === 1) ? "selected" : ""}>Small Blur / 1</option>
+                    <option value="3" selected={(kernel_size != null && kernel_size === 3) ? "selected" : ""}>Middle Blur / 3 </option>
+                    <option value="5" selected={(kernel_size != null && kernel_size === 5) ? "selected" : ""}>Hard Blur / 5</option>
+                    <option value="7" selected={(kernel_size != null && kernel_size === 7) ? "selected" : ""}>Extreme Blur / 7</option>
                 </select>
                 <h3>Sigma Value</h3>
                 <select class = 'value_selecter' id="sigma_value">
-                    <option value="0">0.0</option>
-                    <option value="0.25" selected="selected">0.25</option>
-                    <option value="0.5">0.5</option>
-                    <option value="0.75">0.75</option>
-                    <option value="1">1.0</option>
+                    <option value="0" selected={(sigma_val != null && sigma_val === 0) ? "selected" : ""}>0.0</option>
+                    <option value="0.25" selected={(sigma_val != null && sigma_val === 0.25) ? "selected" : ""}>0.25</option>
+                    <option value="0.5" selected={(sigma_val != null && sigma_val === 0.5) ? "selected" : ""}>0.5</option>
+                    <option value="0.75" selected={(sigma_val != null && sigma_val === 0.75) ? "selected" : ""}>0.75</option>
+                    <option value="1" selected={(sigma_val != null && sigma_val === 1) ? "selected" : ""}>1.0</option>
                 </select>
             </Grid>
             <Button variant="contained" color="secondary" onClick={actionButton['resizeImg'].action || (() => {
@@ -215,52 +218,6 @@ const ImageBlur = (props) => {
             </Button>
             {<Canvas/>}
         </div>
-        //     <Container fluid>
-        //         <Row>
-        //             <Col md={3}>
-        //                 <Card>
-        //                     <Card.Body>Content image</Card.Body>
-        //             {showImage && <img src={imageURL} alt="upload-preview" ref={imageRef}/>}
-        //             <input
-        //                 type="file"
-        //                 accept="image/*"
-        //                 capture="camera"
-        //                 onChange={handleUpload}
-        //                 ref={inputRef}
-        //             />
-        //                 </Card>
-        //                 </Col>
-        //
-        //             <Col>
-        //             {showStyleImage && <img src={imageStyleURL} alt="upload-preview" ref={imageStyleRef}/>}
-        //             Style image
-        //             <input
-        //                 type="file"
-        //                 accept="image/*"
-        //                 capture="camera"
-        //                 onChange={handleStyleUpload}
-        //                 ref={inputStyleRef}
-        //             />
-        //                 </Col>
-        //             </Row>
-        //         <Row>
-        //         {
-        //             showResults && (
-        //                 <ul>
-        //                     {results.map(({className, probability}) => (
-        //                         <li key={className}>{`${className}: %${(probability * 100).toFixed(
-        //                             2
-        //                         )}`}</li>
-        //                     ))}
-        //                 </ul>
-        //             )
-        //         }
-        //         <button onClick={actionButton[appState].action || (() => {
-        //         })}>
-        //             {actionButton[appState].text}
-        //         </button>
-        //             </Row>
-        //     </Container>
     )
         ;
 }
