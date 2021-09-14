@@ -2,6 +2,9 @@ import React, {useState, useRef, useReducer, useEffect} from "react";
 import * as tf from '@tensorflow/tfjs';
 import {Button, Grid} from "@material-ui/core";
 
+// This file containts page and functions for super resolution
+
+// Define constant states
 const machine = {
     initial: "initial",
     states: {
@@ -18,7 +21,7 @@ const machine = {
     }
 };
 
-
+// Full Event for Super Resolution
 const SuperResolution = (props) => {
     const [results, setResults] = useState([]);
     const [imageURL, setImageURL] = useState(null);
@@ -56,6 +59,7 @@ const SuperResolution = (props) => {
 
     const next = () => dispatch("next");
 
+    // Canvas for outputing the generated resized image
     class Canvas extends React.Component {
         componentDidMount() {
             this.updateCanvas()
@@ -82,6 +86,7 @@ const SuperResolution = (props) => {
         next();
     };
 
+    // Read the image from upload
     const handleUpload = event => {
         const {files} = event.target;
         if (files.length > 0) {
@@ -103,17 +108,21 @@ const SuperResolution = (props) => {
             next();
     }
     
+    // Load the resizing model, with its parameters and resize the image
     const handleResizeImage = async event => {
         
         //const model = await tf.loadGraphModel('esrgan/model.json');
+        // Load the model
         const model = await tf.loadGraphModel('dcscn/model.json');
 
+        // Check if previous image exists
         var img = null;
         if(previousImage === null)
             img = tf.browser.fromPixels(imageRef.current).toFloat().div(tf.scalar(255)).expandDims();
         else
             img = previousImage.expandDims();
        
+        // Define new size for image
         let size_arr = img.shape;
         let size_increase = 2; // Right now only increase by 2
         let new_size_arr = [parseInt(size_arr[1] * size_increase), // NWHC sp 0 - batch size
@@ -127,7 +136,8 @@ const SuperResolution = (props) => {
         // or the shorthand way
         var feed_dict = {};
         const axis = 3;
-        feed_dict['dropout_keep_rate'] = tf.tensor(1);
+        // Define model parameters
+        feed_dict['dropout_keep_rate'] = tf.tensor(1); // We are inference state so dropout is 1
         feed_dict['x2'] = resized.expandDims(axis).reshape([new_size_arr[2],new_size_arr[0], new_size_arr[1],1]);
         feed_dict['x'] = img.expandDims(axis).reshape([size_arr[3], size_arr[1], size_arr[2], 1]);
 
@@ -135,6 +145,7 @@ const SuperResolution = (props) => {
         //     return model.predict([1], [stylizedImage.expandDims(), [1.0], resized.expandDims(), ]).squeeze().clipByValue(0, 1);
         // })
         
+        // Predict the result
         const resized_image = await tf.tidy(() => {
             return model.predict(feed_dict).squeeze().clipByValue(0, 1);
         }).reshape([new_size_arr[0], new_size_arr[1], new_size_arr[2]]);
@@ -151,6 +162,8 @@ const SuperResolution = (props) => {
         resizeImg: {action: handleResizeImage, text: "Resize"},
         complete: {action: reset, text: "Reset"}
     };
+
+    // Load page with details from this page as defined in react 
     return (
         <div>
 

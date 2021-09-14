@@ -2,6 +2,7 @@ import React, {useState, useRef, useReducer, useEffect} from "react";
 import * as tf from '@tensorflow/tfjs';
 import {Button, Grid} from "@material-ui/core";
 
+// This file contains functions and page for applying blur on the image
 
 function get1dGaussianKernel(sigma, size) {
     // Generate a 1d gaussian distribution across a range
@@ -21,6 +22,7 @@ function get2dGaussianKernel(size, sigma) {
 }
 
 function getGaussianKernel(size, sigma) {
+    // Generate gaussian kernel
     return tf.tidy(() => {
         var kerne2d = get2dGaussianKernel(size, sigma)
         var kerne3d = tf.stack([kerne2d, kerne2d, kerne2d])
@@ -34,6 +36,7 @@ function blur(image, kernel) {
     })
 }
 
+// Create const states
 const machine = {
     initial: "initial",
     states: {
@@ -50,7 +53,7 @@ const machine = {
     }
 };
 
-
+// Full event for Blurring
 const ImageBlur = (props) => {
     const [results, setResults] = useState([]);
     const [imageURL, setImageURL] = useState(null);
@@ -100,6 +103,7 @@ const ImageBlur = (props) => {
 
     const next = () => dispatch("next");
 
+    // Use canvas to show generated blurred image
     class Canvas extends React.Component {
         componentDidMount() {
             this.updateCanvas()
@@ -125,6 +129,7 @@ const ImageBlur = (props) => {
         next();
     };
 
+    //Upload file
     const handleUpload = event => {
         const {files} = event.target;
         if (files.length > 0) {
@@ -143,13 +148,15 @@ const ImageBlur = (props) => {
     }
 
     const blur_image = async event => {
-        
+        // Main event for reading the uploaded or loaded image and then apply 
+        // Above defined blurring functions.        
         let img = null;
         if(previousImage === null)
             img = tf.browser.fromPixels(imageRef.current).toFloat().div(tf.scalar(255)).expandDims();
         else
             img = previousImage.expandDims();
 
+        // We read user defined bluring values
         let size = parseInt(document.getElementById("size_value").value);
         let sigma = parseFloat(document.getElementById("sigma_value").value);
 
@@ -176,6 +183,7 @@ const ImageBlur = (props) => {
         resizeImg: {action: blur_image, text: "Blur",},
         complete: {action: reset, text: "Reset"}
     };
+    // Load page with details from this page as defined in react 
     return (
         <div>
 

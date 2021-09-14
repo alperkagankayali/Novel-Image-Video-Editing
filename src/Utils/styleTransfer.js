@@ -2,6 +2,10 @@ import "../App.css"
 import React, {useState, useRef, useReducer, useEffect} from "react";
 import * as tf from '@tensorflow/tfjs';
 import {Button, Grid, Typography} from "@material-ui/core";
+
+// File contains page and functions for Style Transfer
+
+// Define constant state
 const machine = {
     initial: "initial",
     states: {
@@ -20,6 +24,7 @@ const machine = {
     }
 };
 
+// Full event for Style Transfer
 const StyleTransfer = (props) => {
     const [results, setResults] = useState([]);
     const [imageURL, setImageURL] = useState(null);
@@ -89,6 +94,8 @@ const StyleTransfer = (props) => {
                 setStylizedImage(null);            
         }
           });
+        
+    // Event for loading model with transformer
     const loadModel = async () => {
         next();
         const transformerModel = await tf.loadGraphModel('saved_model_transformer_separable_js/model.json')
@@ -96,7 +103,8 @@ const StyleTransfer = (props) => {
         props.handleState(imageURL, imageStyleURL, appState, styleVector, null, null, transformerModel, model);
         next();        
     }
-
+    
+    // Event for loading style transfer model
     const loadStyleModel = async () => {
         next()
         const model = await tf.loadGraphModel('saved_model_style_js/model.json');
@@ -105,7 +113,7 @@ const StyleTransfer = (props) => {
         next()        
     }
 
-
+    // Event for predicting image based from loaded image
     const identify = async () => {
         next()
         var stylized = null;
@@ -125,6 +133,7 @@ const StyleTransfer = (props) => {
         props.handleState(imageURL, imageStyleURL, appState, styleVector, null, null, transformerModel, model);
     };
 
+    // Calculating style feature vector from style transfer model
     const computeStyleVector = async () => {
         next();
         const bottleneck = await tf.tidy(() => {
@@ -137,7 +146,7 @@ const StyleTransfer = (props) => {
         props.handleState(imageURL, imageStyleURL, appState, bottleneck, null, null, transformerModel, model);
     };
 
-
+    // Canvas for outputing generated image
     class Canvas extends React.Component {
         componentDidMount() {
             this.updateCanvas()
@@ -157,6 +166,7 @@ const StyleTransfer = (props) => {
         }
     }
 
+    // Reset the state
     const reset = async () => {
         setResults([]);
         props.handleChange({});
@@ -168,6 +178,7 @@ const StyleTransfer = (props) => {
     const upload = () => inputRef.current.click();
 
     const styleUpload = () => inputStyleRef.current.click();
+    // Reading uploaded input content image
     const handleUpload = async event => {
         const {files} = event.target;
         if (files.length > 0) {
@@ -180,6 +191,7 @@ const StyleTransfer = (props) => {
         
     };
 
+    // Reading uploaded style image
     const handleStyleUpload = async event => {
         const {files} = event.target;
         if (files.length > 0) {
@@ -223,6 +235,8 @@ const StyleTransfer = (props) => {
         };
     }
     const {showImage, showStyleImage, showResults} = machine.states[appState];
+
+    // Load page with details from this page as defined in react 
     return (
         
         <Grid container spacing={10} direction="row">

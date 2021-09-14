@@ -2,6 +2,9 @@ import React, {useState, useRef, useReducer, useEffect} from "react";
 import * as tf from '@tensorflow/tfjs';
 import {Button, Grid} from "@material-ui/core";
 
+// In this file we define function and page for flipping the image
+
+// Define constant states
 const machine = {
     initial: "initial",
     states: {
@@ -18,6 +21,7 @@ const machine = {
     }
 };
 
+// Full event for Flipping
 const ImageFlip = (props) => {
     const [results, setResults] = useState([]);
     const [imageURL, setImageURL] = useState(null);
@@ -63,6 +67,7 @@ const ImageFlip = (props) => {
 
     const next = () => dispatch("next");
 
+    // Use canvas to show generated flipped image
     class Canvas extends React.Component {
         componentDidMount() {
             this.updateCanvas()
@@ -88,6 +93,7 @@ const ImageFlip = (props) => {
         next();
     };
 
+    // Read the uploaded image
     const handleUpload = event => {
         const {files} = event.target;
         setStylizedImage(null);
@@ -101,6 +107,7 @@ const ImageFlip = (props) => {
 
     const upload = () => inputRef.current.click();
 
+    // Event for flipping the image
     const flip_image = async event => {
         
         let img = null;
@@ -110,6 +117,7 @@ const ImageFlip = (props) => {
         else
             img = previousImage.expandDims();
 
+        // Read method how user wants to flip the image
         let method = parseInt(document.getElementById("method").value)
 
         let flipped_img = null;
@@ -151,6 +159,7 @@ const ImageFlip = (props) => {
 
     const {showImage, showStyleImage, showResults} = machine.states[appState];
 
+    // Load page with details from this page as defined in react 
     return (
         <div>
 
