@@ -222,7 +222,7 @@ class EffectGrid extends React.Component {
 
             <Grid container direction="column" wrap="nowrap">
              {middleColumn}
-             <Button variant="contained" color="secondary" onClick = {this.props.buttonClick1} align={"center"}>Save Style</Button>
+             <Button variant="contained" color="secondary" onClick = {this.props.buttonClick1} align={"center"}>Save Effect</Button>
             </Grid>
         );
     }

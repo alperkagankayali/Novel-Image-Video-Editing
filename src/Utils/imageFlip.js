@@ -166,11 +166,11 @@ const ImageFlip = (props) => {
             <img src={imageURL} alt="upload-preview" ref={imageRef} 
                     width="256" height="256"/>
             <br></br>
-            <Button variant="contained" color="secondary" onClick={actionButton['uploadState'].action || (() => {
+            {previousImage === null && <Button variant="contained" color="secondary" onClick={actionButton['uploadState'].action || (() => {
                             })}>
                                 {actionButton['uploadState'].text}
-            </Button>
-            <Grid item spacing={10}>
+            </Button>}
+            {previousImage === null && <Grid item spacing={10}>
                         <input id="content-img"
                                type="file"
                                accept="image/*"
@@ -178,7 +178,7 @@ const ImageFlip = (props) => {
                                onChange={handleUpload}
                                ref={inputRef}
                         />
-            </Grid>
+            </Grid>}
             <Grid>
                 <h3>Image Flip</h3>
                 <select class = 'value_selecter' id="method">
