@@ -1,13 +1,50 @@
 # Novel-Image-Video-Editing
 
-In order to add a new effect to the project, one needs to do:
+This project aims to mimic Adobe Photoshop effects and various other ones using Deep Learning models and algorithms. 
 
-1-add the effect as a component under the "Utils" folder
+## How to install
 
-2-add props.handleChange(output_tensor) function to your component. The input parameter of this function should be the output of the effect that is applied. If tf.js is being used, then it should have the format tf.Tensor
+These instructions will show you how to install the project. 
 
-3-Import your effect in the effectgrid.js and include it to the switch case.
+### Prerequisites
 
-4-Include it as an option in the homeleftgrid.js. One needs to send and retrieve states when the button is clicked. check how style transfer component handles these things.
+- [Node JS](https://nodejs.org/en/download/)
 
-5- If you did everything correctly, you should have added a new effect to the system. Congrats!
+### Installing
+
+### Linux or Mac
+
+First, open your terminal. 
+
+Then, clone the project as such
+
+```
+git clone <url_of_the_project>
+
+```
+
+Then, change directory to the project's directory
+```
+cd Novel-Image-Video-Editing
+
+```
+
+Finally, install the dependencies using Node
+
+```
+npm install
+
+```
+
+## How to run
+
+If you have followed the steps and did not encounter any errors. You are ready to run the project! Simply run this command in your terminal:
+
+```
+npm start
+
+```
+
+which will run the project. The project will be displayed here:
+
+https://localhost:3000/
