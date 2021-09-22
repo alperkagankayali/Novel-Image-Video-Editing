@@ -93,13 +93,7 @@ const StyleTransfer = (props) => {
             else
                 setStylizedImage(null);            
         }
-<<<<<<< Updated upstream
-          });
-        
-    // Event for loading model with transformer
-=======
           }, []);
->>>>>>> Stashed changes
     const loadModel = async () => {
         next();
         const transformerModel = await tf.loadGraphModel('saved_model_transformer_separable_js/model.json')
