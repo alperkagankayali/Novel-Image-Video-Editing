@@ -31,28 +31,37 @@ const ImageFlip = (props) => {
     const imageRef = useRef();
     const inputRef = useRef();
 
+    //Reducer to deal with the state changes
     const reducer = (state, event) =>
         machine.states[state].on[event] || machine.initial;
 
     const [appState, dispatch] = useReducer(reducer, machine.initial);
+
+    //Similar to componentDidMount method, every time an update or a change happens, this method is invoked
     useEffect(() => {    // Update the document title using the browser API    
+        //Check whether there is a product that is created by the previous layers. If so, use that product
         if(props.last_output_tensor != null && Object.keys(props.last_output_tensor).length != 0){
             setPreviousImage(props.last_output_tensor);
-            
         }
+
+        //If the filter is clicked on in right grid, this is invoked since it is not creating a new filter but editing an existing one.
+        //It loads the page to the appropriate state.
         if(props.getData(props.effect_id) != null && props.id_to_change != null){
-            dispatch(machine.initial);            
+            dispatch(machine.initial);
+            //Check image1 is instantiated. If so, load the already instantiated model            
             if(props.applied_effects[props.getData(props.effect_id)]["image1"] != null){
                 setImageURL(props.applied_effects[props.getData(props.effect_id)]["image1"]);
                 next()
             }
             else
                 setImageURL(null);
+            //Check if image_flip is instantiated. If so, load the already instantiated model
             if(props.applied_effects[props.getData(props.effect_id)]["image_flip"] != null){
                 setImageFlip(props.applied_effects[props.getData(props.effect_id)]["image_flip"]);
             }
             else
                 setImageFlip(null);
+            //Check the entire process is completed and a final product is created. If so, load that final product.
             if(Object.keys(props.applied_effects[props.getData(props.effect_id)]["data"]).length != 0){
                 setStylizedImage(props.applied_effects[props.getData(props.effect_id)]["data"]);
                 next();
@@ -89,7 +98,11 @@ const ImageFlip = (props) => {
 
     const reset = async () => {
         setResults([]);
+        //Since we reseted it, the final product should be empty
         props.handleChange({});
+        await props.handleState(null, null, null, null, null, null, null, null);
+        //Invokes parent method for updating the respective filter in the dictionary of filters with the new state since it is reseted.
+        await props.updateWithID(props.effect_id);
         next();
     };
 
@@ -104,14 +117,14 @@ const ImageFlip = (props) => {
             props.handleState(url, null, null, null, null, null, null, null);
         }
     };
-
+    //For uploading images
     const upload = () => inputRef.current.click();
 
     // Event for flipping the image
     const flip_image = async event => {
         
         let img = null;
-       
+        // Check if previous image exists
         if(previousImage === null)
             img = tf.browser.fromPixels(imageRef.current).toFloat().div(tf.scalar(255)).expandDims();
         else
@@ -130,6 +143,8 @@ const ImageFlip = (props) => {
         {
             flipped_img = tf.reverse(img, 1).squeeze(0)
         }
+        
+        //Rotate randomly
         else if (method == 3)
         {
             let max = 0.2;
@@ -143,21 +158,21 @@ const ImageFlip = (props) => {
 
             flipped_img = tf.image.rotateWithOffset(img, rand).squeeze();
         }
-
+        //Save the final product by sending it to the parent
         props.handleChange(flipped_img);
         setStylizedImage(flipped_img);
         props.handleState(imageURL, null, null, null, null, method , null, null); 
         next();
 
     };
-
+    //Different States
     const actionButton = {
         uploadState: {action: upload, text: "Upload Image"},
         resizeImg: {action: flip_image, text: "Flip",},
         complete: {action: reset, text: "Reset"}
     };
 
-    const {showImage, showStyleImage, showResults} = machine.states[appState];
+    
 
     // Load page with details from this page as defined in react 
     return (

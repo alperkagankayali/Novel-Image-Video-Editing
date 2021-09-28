@@ -72,3 +72,7 @@ npm start
 which will run the project. The project will be displayed here:
 
 https://localhost:3000/
+
+## Future Work
+
+See the presentation slides for future work :)

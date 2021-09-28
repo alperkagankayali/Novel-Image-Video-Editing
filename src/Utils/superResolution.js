@@ -30,23 +30,30 @@ const SuperResolution = (props) => {
     const imageRef = useRef();
     const inputRef = useRef();
 
+    //Reducer to deal with the state changes
     const reducer = (state, event) =>
         machine.states[state].on[event] || machine.initial;
 
     const [appState, dispatch] = useReducer(reducer, machine.initial);
 
-     useEffect(() => {    // Update the document title using the browser API    
+    //Similar to componentDidMount method, every time an update or a change happens, this method is invoked
+    useEffect(() => {    // Update the document title using the browser API    
+        //Check whether there is a product that is created by the previous layers. If so, use that product
         if(props.last_output_tensor != null && Object.keys(props.last_output_tensor).length != 0){
             setPreviousImage(props.last_output_tensor);            
         }
+        //If the filter is clicked on in right grid, this is invoked since it is not creating a new filter but editing an existing one.
+        //It loads the page to the appropriate state.
         if(props.getData(props.effect_id) != null && props.id_to_change != null){
-            dispatch(machine.initial);            
+            dispatch(machine.initial);
+            //Check image1 is instantiated. If so, load the already instantiated model            
             if(props.applied_effects[props.getData(props.effect_id)]["image1"] != null){
                 setImageURL(props.applied_effects[props.getData(props.effect_id)]["image1"]);
                 next()
             }
             else
                 setImageURL(null);
+            //Check the entire process is completed and a final product is created. If so, load that final product.
             if(Object.keys(props.applied_effects[props.getData(props.effect_id)]["data"]).length != 0){
                 setStylizedImage(props.applied_effects[props.getData(props.effect_id)]["data"]);
                 next();
@@ -82,7 +89,11 @@ const SuperResolution = (props) => {
 
     const reset = async () => {
         setResults([]);
+        //Since we reseted it, the final product should be empty
         props.handleChange({});
+        await props.handleState(null, null, null, null, null, null, null, null);
+        //Invokes parent method for updating the respective filter in the dictionary of filters with the new state since it is reseted.
+        await props.updateWithID(props.effect_id);
         next();
     };
 
@@ -91,14 +102,14 @@ const SuperResolution = (props) => {
         const {files} = event.target;
         if (files.length > 0) {
             const url = URL.createObjectURL(event.target.files[0]);
-            // contentImage = getImage(imageRef.current)
+            
             setImageURL(url);
             next();
             
             props.handleState(url, null, null, null, null, null, null, null);
         }
     };
-
+    //For uploading images
     const upload = () => {
         if(previousImage === null){
             inputRef.current.click();
@@ -111,7 +122,7 @@ const SuperResolution = (props) => {
     // Load the resizing model, with its parameters and resize the image
     const handleResizeImage = async event => {
         
-        //const model = await tf.loadGraphModel('esrgan/model.json');
+        
         // Load the model
         const model = await tf.loadGraphModel('dcscn/model.json');
 
@@ -140,16 +151,12 @@ const SuperResolution = (props) => {
         feed_dict['dropout_keep_rate'] = tf.tensor(1); // We are inference state so dropout is 1
         feed_dict['x2'] = resized.expandDims(axis).reshape([new_size_arr[2],new_size_arr[0], new_size_arr[1],1]);
         feed_dict['x'] = img.expandDims(axis).reshape([size_arr[3], size_arr[1], size_arr[2], 1]);
-
-        // const resized_image = await tf.tidy(() => {
-        //     return model.predict([1], [stylizedImage.expandDims(), [1.0], resized.expandDims(), ]).squeeze().clipByValue(0, 1);
-        // })
         
         // Predict the result
         const resized_image = await tf.tidy(() => {
             return model.predict(feed_dict).squeeze().clipByValue(0, 1);
         }).reshape([new_size_arr[0], new_size_arr[1], new_size_arr[2]]);
-        //setStyleVector(bottleneck)
+        
         props.handleChange(resized_image);
         setStylizedImage(resized_image);
         next();
@@ -157,6 +164,7 @@ const SuperResolution = (props) => {
 
     };
 
+    //Different States
     const actionButton = {
         uploadState: {action: upload, text: "Upload Image"},
         resizeImg: {action: handleResizeImage, text: "Resize"},

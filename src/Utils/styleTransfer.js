@@ -38,6 +38,8 @@ const StyleTransfer = (props) => {
     const imageStyleRef = useRef();
     const inputRef = useRef();
     const inputStyleRef = useRef();
+    
+    //Reducer to deal with the state changes
     const reducer = (state, event) =>
         machine.states[state].on[event] || machine.initial;
 
@@ -45,13 +47,19 @@ const StyleTransfer = (props) => {
 
     const next = () => dispatch("next");
 
-
+    //Similar to componentDidMount method, every time an update or a change happens, this method is invoked
     useEffect( () => {    // Update the document title using the browser API    
+        
+        //Check whether there is a product that is created by the previous layers. If so, use that product 
         if(props.last_output_tensor != null && Object.keys(props.last_output_tensor).length != 0){
             setPreviousImage(props.last_output_tensor);
         }
+
+        //If the filter is clicked on in right grid, this is invoked since it is not creating a new filter but editing an existing one.
+        //It loads the page to the appropriate state.
         if(props.getData(props.effect_id) != null && props.id_to_change != null){
             dispatch(machine.initial);         
+            //Check model1 is instantiated. If so, load the already instantiated model
             if(props.applied_effects[props.getData(props.effect_id)]["model1"] != null){
                 next();
                 setTransformetModel(props.applied_effects[props.getData(props.effect_id)]["model1"]);
@@ -59,6 +67,7 @@ const StyleTransfer = (props) => {
             }
             else
                 setTransformetModel(null);
+            //Check model2 is instantiated. If so, load the already instantiated model
             if(props.applied_effects[props.getData(props.effect_id)]["model2"] != null){
                 next();
                 setModel(props.applied_effects[props.getData(props.effect_id)]["model2"]);
@@ -66,12 +75,14 @@ const StyleTransfer = (props) => {
             }
             else
                 setModel(null);
+            //Check image1 is instantiated. If so, load the already instantiated model
             if(props.applied_effects[props.getData(props.effect_id)]["image1"] != null){
                 setImageURL(props.applied_effects[props.getData(props.effect_id)]["image1"]);
                 next()
             }
             else
                 setImageURL(null);
+            //Check stylevector is instantiated. If so, load the already instantiated model
             if(props.applied_effects[props.getData(props.effect_id)]["kernel_size"]  != null){
                 next();
                 setStyleVector(props.applied_effects[props.getData(props.effect_id)]["kernel_size"]);
@@ -79,12 +90,14 @@ const StyleTransfer = (props) => {
             }
             else
                 setStyleVector(null);
+            //Check image2 is instantiated. If so, load the already instantiated model
             if(props.applied_effects[props.getData(props.effect_id)]["image2"]  != null){
                 setImageStyleURL(props.applied_effects[props.getData(props.effect_id)]["image2"]);
                 next();
             }
             else
                 setImageStyleURL(null);
+            //Check the entire process is completed and a final product is created. If so, load that final product.
             if(Object.keys(props.applied_effects[props.getData(props.effect_id)]["data"]).length != 0){
                 next();
                 setStylizedImage(props.applied_effects[props.getData(props.effect_id)]["data"]);
@@ -93,11 +106,14 @@ const StyleTransfer = (props) => {
             else
                 setStylizedImage(null);            
         }
-          }, []);
+          });
+
+    //A method for loading the transformer model
     const loadModel = async () => {
         next();
         const transformerModel = await tf.loadGraphModel('saved_model_transformer_separable_js/model.json')
         setTransformetModel(transformerModel)
+        //This is for sending the current state of the component to its parents so when a save button is clicked, the parent can save it in a dictionary manner.
         props.handleState(imageURL, imageStyleURL, appState, styleVector, null, null, transformerModel, model);
         next();        
     }
@@ -115,6 +131,7 @@ const StyleTransfer = (props) => {
     const identify = async () => {
         next()
         var stylized = null;
+        //If there is a previous product, use that one
         if(previousImage != null){
             stylized = await tf.tidy(() => {
                 return transformerModel.predict([previousImage.div(tf.scalar(255)).expandDims(), styleVector]).squeeze();
@@ -125,6 +142,7 @@ const StyleTransfer = (props) => {
                 return transformerModel.predict([tf.browser.fromPixels(imageStyleRef.current).toFloat().div(tf.scalar(255)).expandDims(), styleVector]).squeeze();
             })
         }
+        //Set the output of this product as the final product in the pipeline
         props.handleChange(stylized);
         setStylizedImage(stylized) 
         next();
@@ -139,6 +157,7 @@ const StyleTransfer = (props) => {
         })
         setStyleVector(bottleneck)
         next();
+        //If previous image is not null, this is already created, just skip it
         if(previousImage != null)
             next();
         props.handleState(imageURL, imageStyleURL, appState, bottleneck, null, null, transformerModel, model);
@@ -167,12 +186,15 @@ const StyleTransfer = (props) => {
     // Reset the state
     const reset = async () => {
         setResults([]);
+        //Since we reseted it, the final product should be empty
         props.handleChange({});
         await props.handleState(null, null, null, null, null, null, transformerModel, model);
+        //Invokes parent method for updating the respective filter in the dictionary of filters with the new state since it is reseted.
         await props.updateWithID(props.effect_id);
         next();
     };
 
+    //For uploading images
     const upload = () => inputRef.current.click();
 
     const styleUpload = () => inputStyleRef.current.click();
@@ -202,6 +224,7 @@ const StyleTransfer = (props) => {
        
     };
     var actionButton = null;
+    //If there is no previous product, use these states
     if(previousImage === null || Object.keys(previousImage).length === 0){
             actionButton = {
             initial: {action: loadModel, text: "Load Model"},
@@ -236,9 +259,9 @@ const StyleTransfer = (props) => {
 
     // Load page with details from this page as defined in react 
     return (
-        
+       
         <Grid container spacing={10} direction="row">
-
+            
             <Grid container item  xs={12} spacing={0} direction="column">
                 <Grid container spacing={2} direction={"row"}>
                     <Grid item spacing={10}>
@@ -253,17 +276,18 @@ const StyleTransfer = (props) => {
                                ref={inputRef}
                         />
                     </Grid>
-                    {previousImage === null && <Grid item spacing={10}>
+                    <Grid item spacing={10}>
                         {showStyleImage && <Typography align={"center"}><b>Content image</b></Typography>}
                         {showStyleImage && <img src={imageStyleURL} alt="upload-preview" ref={imageStyleRef}/>}
-                        <input
+                        
+                        {previousImage === null && <input
                             type="file"
                             accept="image/*"
                             capture="camera"
                             onChange={handleStyleUpload}
                             ref={inputStyleRef}
-                        />
-                    </Grid>}
+                        />}
+                    </Grid>
 
                 </Grid>
 

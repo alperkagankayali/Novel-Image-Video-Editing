@@ -16,13 +16,18 @@ class HomeRightGrid extends React.Component {
             id_to_change: null
         };
     }
+    //When there is an update in the Effect Grid, it should also trigger an update here. Thus, this function is invoked when this is the case.
     async componentDidUpdate(){
         if(this.props.saveButtonClicked){
+            //For preventing infinite updates
             this.props.changeSaveButton();
+            //setting up the state.
             await this.setState({effectsAndTheirResponses: this.props.currentAppliedEffects});
+            //Sending the last data to the effect grid since this is the current product that should be worked on.
             this.getLastData();
         }
     }
+    //Helper function for getting the last product that is created and saved in the system
     getLastData(){
         let latest = null;
         for(var key in this.state.effectsAndTheirResponses){
@@ -30,9 +35,11 @@ class HomeRightGrid extends React.Component {
         }
         this.props.sendLastData(latest);
     }
+    //Helper function for removing the respective effect. Takes the id of the respective effect and sends it to the parent.
     async removeDataWithID(id){
         this.props.removeDataHomepage(id);
     }
+    //Helper function for selecting the respective effect and re-rendering the screen. Takes the id of the respective effect and sends it to the parent.
     async getEyeToEffectWithID(id, insideText){
         await this.setState({id_to_change: id,
             insideText: insideText});

@@ -64,34 +64,43 @@ const ImageBlur = (props) => {
     const imageRef = useRef();
     const inputRef = useRef();
 
+    //Reducer to deal with the state changes
     const reducer = (state, event) =>
         machine.states[state].on[event] || machine.initial;
 
     const [appState, dispatch] = useReducer(reducer, machine.initial);
 
+    //Similar to componentDidMount method, every time an update or a change happens, this method is invoked
     useEffect(() => {    // Update the document title using the browser API    
+        //Check whether there is a product that is created by the previous layers. If so, use that product
         if(props.last_output_tensor != null && Object.keys(props.last_output_tensor).length != 0){
             setPreviousImage(props.last_output_tensor);
-            
         }
+
+        //If the filter is clicked on in right grid, this is invoked since it is not creating a new filter but editing an existing one.
+        //It loads the page to the appropriate state.
         if(props.getData(props.effect_id) != null && props.id_to_change != null){
             dispatch(machine.initial);            
+            //Check image1 is instantiated. If so, load the already instantiated model
             if(props.applied_effects[props.getData(props.effect_id)]["image1"] != null){
                 setImageURL(props.applied_effects[props.getData(props.effect_id)]["image1"]);
                 next()
             }
             else
                 setImageURL(null);
+            //Check if kernel size is instantiated. If so, load the already instantiated model
             if(props.applied_effects[props.getData(props.effect_id)]["kernel_size"] != null){
                 setKernelSize(props.applied_effects[props.getData(props.effect_id)]["kernel_size"]);
             }
             else
                 setKernelSize(null);
+            //Check if sigma value is instantiated. If so, load the already instantiated model
             if(props.applied_effects[props.getData(props.effect_id)]["sigma_val"] != null){
                 setSigmaVal(props.applied_effects[props.getData(props.effect_id)]["sigma_val"]);
             }
             else
                 setSigmaVal(null);
+            //Check the entire process is completed and a final product is created. If so, load that final product.
             if(Object.keys(props.applied_effects[props.getData(props.effect_id)]["data"]).length != 0){
                 setStylizedImage(props.applied_effects[props.getData(props.effect_id)]["data"]);
                 next();
@@ -125,7 +134,11 @@ const ImageBlur = (props) => {
 
     const reset = async () => {
         setResults([]);
+        //Since we reseted it, the final product should be empty
         props.handleChange({});
+        await props.handleState(null, null, null, null, null, null, null, null);
+        //Invokes parent method for updating the respective filter in the dictionary of filters with the new state since it is reseted.
+        await props.updateWithID(props.effect_id);
         next();
     };
 
@@ -139,7 +152,7 @@ const ImageBlur = (props) => {
             props.handleState(url, null, null, null, null, null, null, null);
         }
     };
-
+    //For uploading images
     const upload = () => {
         if(previousImage === null)
             inputRef.current.click();
@@ -149,7 +162,9 @@ const ImageBlur = (props) => {
 
     const blur_image = async event => {
         // Main event for reading the uploaded or loaded image and then apply 
-        // Above defined blurring functions.        
+        // Above defined blurring functions.
+        
+        // Check if previous image exists
         let img = null;
         if(previousImage === null)
             img = tf.browser.fromPixels(imageRef.current).toFloat().div(tf.scalar(255)).expandDims();
@@ -177,7 +192,7 @@ const ImageBlur = (props) => {
         next();
 
     };
-
+    //Different States
     const actionButton = {
         uploadState: {action: upload, text: "Upload Image"},
         resizeImg: {action: blur_image, text: "Blur",},

@@ -23,20 +23,24 @@ class Homepage extends React.Component{
         };
         this.getEyeToEffectWithID = this.getEyeToEffectWithID.bind(this);
     }
+    //Helper function for getting the id of the effect that should be removed from the right grid and sending it to the effect grid.
     removeDataHomepage(id){
         this.setState({id_to_remove: id});
     }
-    
+    //Helper function for getting the final product from the right grid and sending it to the effect grid.
     getLastData(tensor){
         this.setState({last_output_tensor: tensor});
     }
+    //This is for getting the name of the effect that is selected from the left grid and sending it tp the effect grid.
     async changeButtonState(event) {
+        //If the current effect that is being edited and the effect that is trying to be created are the same effects, this should be invoked.
         if(event.target.innerText === this.state.insideText){
             await this.setState({insideText: "hello",
-                new_effect_created: !this.state.new_effect_created});
+                                new_effect_created: !this.state.new_effect_created});
             await this.setState({insideText: event.target.innerText,
                 new_effect_created: !this.state.new_effect_created});
         }
+        //Otherwise, this should be invoked
         else{
             this.setState({
                 insideText: event.target.innerText,
@@ -44,35 +48,43 @@ class Homepage extends React.Component{
             })
         }
     }
+    //Helper function to prevent infinite updates
     changeNewEffectCalled(){
         this.setState({new_effect_created: !this.state.new_effect_created});
     }
+    //Helper function to prevent infinite updates
     async updateAppliedEffects(event){
         await this.setState({
             saveButtonClicked: !this.state.saveButtonClicked,
         })
     }
+    //Helper function to prevent infinite updates
     async changeSaveButton(){
         this.setState({
             saveButtonClicked: !this.state.saveButtonClicked
         })
     }
+    //Helper function to prevent infinite updates
     changeSaveButton1(){
         this.setState({
             saveButtonClicked1: !this.state.saveButtonClicked1
         })
     }
+    //This is for getting the final product that is saved from the effect grid and sending it to the right grid.
     updateCurrentOutputTensor(output_tensor){
         this.setState({current_output_tensor: output_tensor}, () => {
-});
+        });
     }
+    //Helper for updating id
     updateID(id){
         this.setState({effect_id: id});
     }
+    //Helper function for sending the current applied effects to the right grid
     async handleAppliedEffects(applied_effects){
         await this.setState({currentAppliedEffects: applied_effects});
         this.changeSaveButton1();
     }
+    //Helper function for getting the selected effect's id and sending it to the effect grid
     async getEyeToEffectWithID(id, insideText){
         await this.setState({id_to_change: id,
                         insideText: insideText});
