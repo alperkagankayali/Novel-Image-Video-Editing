@@ -43,10 +43,16 @@ class EffectGrid extends React.Component {
         }
         //If you click on "Save Effect" button after creating an effect
         if(this.props.saveButtonClicked){
-            //Update the effect with its state
-            this.updateWithID(this.state.effect_id, false);
-            //Send the final applied_effects array to the right grid
-            this.sendStateToRightGrid();
+
+            if(this.props.insideText === ""){
+                alert("Please Select An Effect!");
+            }
+            else{
+                //Update the effect with its state
+                this.updateWithID(this.state.effect_id, false);
+                //Send the final applied_effects array to the right grid
+                this.sendStateToRightGrid();
+            }
             //Preventing infinite updates
             this.props.changeSaveButton();
         }
