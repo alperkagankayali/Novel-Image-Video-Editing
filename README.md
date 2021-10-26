@@ -92,32 +92,32 @@ See the presentation slides for future work :)
 
 ### The Structure of the Project and Possible Alternatives for the Design Choices
 
-1- Redux is used inside the effects for the state transition since there were a lot of effects
-2- OOP structure is used between the grids.
-3- Material-UI is used for the interface
-4- React's default state handling is used for the grids since there were not a lot of state changes
-5- We used the singleton pattern for the grids that we have. This was not preferred for the effects since there can be multiple instances of the same effect.
-6- We used the "crypto" library to create random ids of 4 bytes of hexadecimal to each of the effects that are created.
-7- We used class components to create the grids.
-8- We used functional components to create the effects
-9- We used different in-built functions such as componentDidMount, componentDidUpdate and useEffect. The intention was to update the corresponding states each time there was a change in the respective area.
-10- We used our own CSS to create a very basic design.
-11- We followed React.js customs about a parent sending its either state or its function to the child and child reading them.
+1. Redux is used inside the effects for the state transition since there were a lot of effects
+2. OOP structure is used between the grids.
+3. Material-UI is used for the interface
+4. React's default state handling is used for the grids since there were not a lot of state changes
+5. We used the singleton pattern for the grids that we have. This was not preferred for the effects since there can be multiple instances of the same effect.
+6. We used the "crypto" library to create random ids of 4 bytes of hexadecimal to each of the effects that are created.
+7. We used class components to create the grids.
+8. We used functional components to create the effects
+9. We used different in-built functions such as componentDidMount, componentDidUpdate and useEffect. The intention was to update the corresponding states each time there was a change in the respective area.
+10. We used our own CSS to create a very basic design.
+11. We followed React.js customs about a parent sending its either state or its function to the child and child reading them.
 
 ### Internal Workflow of the System
 
-1- Homepage is loaded. If the user tries to save an effect, there will be a warning popping up since there is not any effect that is selected.
-2- Client selects an effect. The name of the effect is being sent to the Homepage component, then it is being sent to the middle component by the Homepage component
-3- Respective effect is being loaded by the middle component.
-4- The user makes their changes for a specific effect. Each change makes the corresponding effect component move to another state.
-5- If the client clicks on "Save Effect", the state of that effect; including its variables, is being sent to the middle component.
-6- Middle Component stores the state of that effect with an id in a dictionary.
-7- The updated dictionary is being sent to the Homepage component. Then, the Homepage component sends the dictionary to the right component so that the right component can display the updated dictionary.
-8- Right component displays the updated dictionary.
-9- If the client clicks on an effect in the right component, the id of the effect is being sent to the Homepage component. Then, the Homepage component sends this id to the middle component.
-10- Middle component searches the effect with the respective id in the dictionary, finds it and rerenders itself so that it displays the selected effect.
-11- If an effect is finalized and it is being saved, the last edited image is being set to this finalized image. Thus, if another effect is selected, this effect will take this last edited image as its input and it will apply the effects to this image.
-12- If the client clicks on the "Remove Filter" button of an effect, the id of that effect is being sent to the Homepage component. Then, the middle component receives the id from the Homepage component. Then, it finds that effect and deletes it from the dictionary.
+1. Homepage is loaded. If the user tries to save an effect, there will be a warning popping up since there is not any effect that is selected.
+2. Client selects an effect. The name of the effect is being sent to the Homepage component, then it is being sent to the middle component by the Homepage component
+3. Respective effect is being loaded by the middle component.
+4. The user makes their changes for a specific effect. Each change makes the corresponding effect component move to another state.
+5. If the client clicks on "Save Effect", the state of that effect; including its variables, is being sent to the middle component.
+6. Middle Component stores the state of that effect with an id in a dictionary.
+7. The updated dictionary is being sent to the Homepage component. Then, the Homepage component sends the dictionary to the right component so that the right component can display the updated dictionary.
+8. Right component displays the updated dictionary.
+9. If the client clicks on an effect in the right component, the id of the effect is being sent to the Homepage component. Then, the Homepage component sends this id to the middle component.
+10. Middle component searches the effect with the respective id in the dictionary, finds it and rerenders itself so that it displays the selected effect.
+11. If an effect is finalized and it is being saved, the last edited image is being set to this finalized image. Thus, if another effect is selected, this effect will take this last edited image as its input and it will apply the effects to this image.
+12. If the client clicks on the "Remove Filter" button of an effect, the id of that effect is being sent to the Homepage component. Then, the middle component receives the id from the Homepage component. Then, it finds that effect and deletes it from the dictionary.
 
 
 
