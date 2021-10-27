@@ -78,10 +78,11 @@ https://localhost:3000/
 * Implement Generative Network in tfjs to convert face generation into
 different style (Cartoon style, Artistic Style. etc).
 * Implement StyleGAN tfjs model to generate Faces from random latent
-space by user. User can draw 4x4 small face and application will be able to
-generate high resolution (1024x1024) realistic face, based on that input.
+space by user. User can colorize small rectangles drawn by programs, to make customizable latent space and application will be able to
+generate high resolution (1024x1024) realistic face, based on that input. This application will be used just for fun and user can also observe
+which rectangle will affect what (maybe skin color, backgorund, etc ... ) 
 * Implement new version of super resolution model ESRGAN, which can
-increase resolution of the image up to 4x. (generate 256x256 from 64x64)
+increase resolution of the image up to 4x, for better and more acurate resizing (generate 256x256 from 64x64)
 * Add upload and algorithm computations on video
 * The Design can be improved by a professional graphics designer
 * More effects can be added
@@ -94,8 +95,7 @@ allowed.
 successor layers that are created. The reason why this is not implemented
 is because predictions for all these layers take a lot of time and it really
 affects user experience negatively.
-* In order to solve the previous issue, different image types might be
-considered
+* Can implement step to make small model run on CPU and big one on GPU (noting memory and compute power of users GPU and CPU), to fully utilize the computational power. But generally, when memory is getting full by one tab of browser it crashes automatically. 
 
 ## Limitations, Structure and Possible Alternatives of the Project
 
