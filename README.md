@@ -87,7 +87,9 @@ increase resolution of the image up to 4x, for better and more acurate resizing 
 * The Design can be improved by a professional graphics designer
 * More effects can be added
 * More interactive Applied Effects section can be done, for example adding a
-drag and drop feature to this section.
+drag and drop feature to this section. In addition, something like a Graph structure
+for the network of effects can be applied.
+* In order to complete the previous item, instead of a three grid design; two grid design can be followed
 * Currently this implementation allows users to create only one network of
 applied effects. Using multiple layer networks for different images might be
 allowed.
@@ -95,7 +97,11 @@ allowed.
 successor layers that are created. The reason why this is not implemented
 is because predictions for all these layers take a lot of time and it really
 affects user experience negatively.
+* In order to solve the previous issue, different image types might be
+considered
+* An alternative solution to the previous item is, trying to predict the layer that might get deleted by the user, so that the predictions which need to be done after the deletion can start early on; ideally, before the deletion. This can be applied as well.
 * Can implement step to make small model run on CPU and big one on GPU (noting memory and compute power of users GPU and CPU), to fully utilize the computational power. But generally, when memory is getting full by one tab of browser it crashes automatically. 
+* Converting the output of a tf.js operation, which is a Tensor, to an image needs to be done somehow. This is essential for obtaining multiple graphs of effects and solving the memory limitations.
 
 ## Limitations, Structure and Possible Alternatives of the Project
 
